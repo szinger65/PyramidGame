@@ -433,7 +433,7 @@
         <div id="host-players-list"></div>
       </div>
 
-      <button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game (Need 2+ players)</button>
+      <button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game (Need 3+ players)</button>
     </div>
   </div>
 
@@ -856,7 +856,79 @@
       }
     }
 
-    function startCardRecallPhase() {
+    function showCardFlipModal(requiredCardValue) {
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.style.display = 'flex';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>Prove you have ${requiredCardValue}!</h3>
+          <p>Click on the ${requiredCardValue} card in your hand to prove you have it.</p>
+          <p>If you don't have it, you'll drink automatically.</p>
+          <div class="modal-buttons">
+            <button class="cancel-btn" onclick="admitBluff('${requiredCardValue}')">I was bluffing</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Make player's cards clickable for proof
+      enableCardFlipProof(requiredCardValue, modal);
+    }
+
+    function enableCardFlipProof(requiredCardValue, modal) {
+      const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
+      const myHandCards = playerHands[myPlayerId] || [];
+      
+      myCards.forEach((cardEl, index) => {
+        const card = myHandCards[index];
+        if (card && card.value === requiredCardValue) {
+          cardEl.style.cursor = 'pointer';
+          cardEl.style.border = '3px solid #f1c40f';
+          
+          cardEl.onclick = (e) => {
+            e.stopPropagation();
+            cardEl.classList.add('flipped');
+            cardEl.style.border = '';
+            cardEl.style.cursor = '';
+            modal.remove();
+            
+            // Send proof to server
+            socket.emit('proveCard', {
+              gameCode,
+              cardValue: requiredCardValue,
+              proved: true
+            });
+          };
+        }
+      });
+      
+      // Auto-admit bluff after 10 seconds if no card clicked
+      setTimeout(() => {
+        if (document.body.contains(modal)) {
+          admitBluff(requiredCardValue);
+        }
+      }, 10000);
+    }
+
+    function admitBluff(cardValue) {
+      const modal = document.querySelector('.modal');
+      if (modal) modal.remove();
+      
+      // Clear any card highlighting
+      const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
+      myCards.forEach(cardEl => {
+        cardEl.style.border = '';
+        cardEl.style.cursor = '';
+        cardEl.onclick = null;
+      });
+      
+      socket.emit('proveCard', {
+        gameCode,
+        cardValue: cardValue,
+        proved: false
+      });
+    }
       gamePhase = 'recall';
       updateGameStatus('recall');
       
@@ -886,23 +958,35 @@
         modal.innerHTML = `
           <div class="modal-content">
             <h3>${currentPlayerName}, recite your cards!</h3>
-            <p>Enter your 4 cards in order (e.g., "A♠ 5♥ K♦ 2♣"):</p>
-            <input type="text" id="card-recall-input" placeholder="Enter your cards..." style="width: 300px; margin: 10px 0;">
+            <p>Enter your 4 card values in order (e.g., "A 5 K 2"):</p>
+            <p><small>No suits needed - just the values!</small></p>
+            <input type="text" id="card-recall-input" placeholder="Enter card values..." style="width: 300px; margin: 10px 0;">
             <div class="modal-buttons">
-              <button class="challenge-btn" onclick="submitCardRecall(${playerIndex})">Submit Cards</button>
+              <button class="challenge-btn" onclick="submitCardRecall(${playerIndex})">Submit Cards (One chance only!)</button>
             </div>
           </div>
         `;
         document.body.appendChild(modal);
         document.getElementById('card-recall-input').focus();
+        
+        // Prevent Enter key from submitting multiple times
+        document.getElementById('card-recall-input').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            submitCardRecall(playerIndex);
+          }
+        });
       } else {
         // Show waiting message
-        showGameMessage(`${currentPlayerName} is reciting their cards...`, 10000);
+        showGameMessage(`${currentPlayerName} is reciting their cards...`, 15000);
       }
     }
 
     function submitCardRecall(playerIndex) {
       const input = document.getElementById('card-recall-input');
+      const submitBtn = document.querySelector('.challenge-btn');
+      
+      if (!input || !submitBtn) return; // Already submitted
+      
       const recalledCards = input.value.trim();
       
       if (!recalledCards) {
@@ -910,9 +994,10 @@
         return;
       }
       
-      // Remove the modal
-      const modal = document.querySelector('.modal');
-      if (modal) modal.remove();
+      // Disable input and button to prevent multiple submissions
+      input.disabled = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
       
       // Send recalled cards to server for verification
       socket.emit('verifyCardRecall', {
@@ -921,6 +1006,12 @@
         playerIndex,
         recalledCards
       });
+      
+      // Remove modal after short delay
+      setTimeout(() => {
+        const modal = document.querySelector('.modal');
+        if (modal) modal.remove();
+      }, 1000);
     }
 
     // Add socket listener for card recall results
@@ -1001,13 +1092,16 @@
         currentTarget = data.targetId;
         
         const challengerIndex = players.indexOf(data.challengerId);
-        const targetIndex = players.indexOf(data.targetId);
         const challengerName = playerNames[challengerIndex];
-        const targetName = playerNames[targetIndex];
         
         document.getElementById('bluff-message').textContent = 
-          `${challengerName} wants ${targetName} to drink!`;
+          `${challengerName} wants you to drink!`;
         document.getElementById('bluff-modal').style.display = 'flex';
+      } else {
+        // Show notification to challenger about their challenge
+        const targetIndex = players.indexOf(data.targetId);
+        const targetName = playerNames[targetIndex];
+        showGameMessage(`Challenge sent to ${targetName}! Waiting for response...`, 3000);
       }
     }
 
@@ -1276,11 +1370,22 @@
     function startLocalMemorizePhase() {
       timeLeft = 30;
       
-      // Only flip the current user's cards face up
-      const myPlayerCards = document.querySelectorAll(`#${myPlayerId} .card`);
-      myPlayerCards.forEach(card => {
-        card.classList.add('flipped');
-      });
+      // Ensure all my cards are flipped face up
+      setTimeout(() => {
+        const myPlayerCards = document.querySelectorAll(`#${myPlayerId} .card`);
+        myPlayerCards.forEach((card, index) => {
+          // Double-check each card is flipped
+          if (!card.classList.contains('flipped')) {
+            card.classList.add('flipped');
+          }
+          
+          // Force a re-render to ensure flip animation works
+          card.style.transform = 'scale(1.01)';
+          setTimeout(() => {
+            card.style.transform = 'scale(1)';
+          }, 100);
+        });
+      }, 200); // Small delay to ensure DOM is ready
       
       memorizeTimer = setInterval(() => {
         timeLeft--;
