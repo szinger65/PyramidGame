@@ -600,9 +600,26 @@
         receiveChallenge(data);
       });
 
+      socket.on('startCardRecall', (data) => {
+        startCardRecallPhase();
+      });
+
+      socket.on('cardRecallResult', (data) => {
+        handleCardRecallResult(data);
+      });
+
       socket.on('error', (error) => {
         showGameMessage(error.message);
       });
+
+    function restartGame() {
+      if (isHost) {
+        socket.emit('gameAction', {
+          gameCode,
+          action: 'restartGame'
+        });
+      }
+    }
     }
 
     // Screen navigation
@@ -677,9 +694,10 @@
       // Update start button state
       const startBtn = document.getElementById('start-game-btn');
       if (startBtn) {
+        const needed = Math.max(0, 3 - playerCount);
         startBtn.disabled = playerCount < 3;
-        startBtn.textContent = playerCount < 3 ? 
-          `Start Game (Need ${3 - playerCount} more players)` : 
+        startBtn.textContent = needed > 0 ? 
+          `Start Game (Need ${needed} more player${needed !== 1 ? 's' : ''})` : 
           `Start Game (${playerCount} players)`;
       }
 
@@ -825,13 +843,102 @@
       }
     }
 
-    function restartGame() {
-      if (isHost) {
-        socket.emit('gameAction', {
-          gameCode,
-          action: 'restartGame'
-        });
+    function flipPlayerCard(playerId, cardValue) {
+      const playerCards = document.querySelectorAll(`#${playerId} .card`);
+      const playerHandCards = playerHands[playerId] || [];
+      
+      // Find and flip the first matching unflipped card
+      for (let i = 0; i < playerHandCards.length && i < playerCards.length; i++) {
+        if (playerHandCards[i].value === cardValue && !playerCards[i].classList.contains('flipped')) {
+          playerCards[i].classList.add('flipped');
+          break;
+        }
       }
+    }
+
+    function startCardRecallPhase() {
+      gamePhase = 'recall';
+      updateGameStatus('recall');
+      
+      showGameMessage('Time to recite your cards! Each player must recall their 4 cards in order.', 5000);
+      
+      // Show card recall input for current player
+      if (myPlayerId === players[0]) { // Start with first player
+        showCardRecallInput(0);
+      }
+    }
+
+    function showCardRecallInput(playerIndex) {
+      if (playerIndex >= players.length) {
+        // All players done, finish game
+        socket.emit('gameAction', { gameCode, action: 'finishGame' });
+        return;
+      }
+      
+      const currentPlayerId = players[playerIndex];
+      const currentPlayerName = playerNames[playerIndex];
+      
+      if (currentPlayerId === myPlayerId) {
+        // My turn to recall
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+          <div class="modal-content">
+            <h3>${currentPlayerName}, recite your cards!</h3>
+            <p>Enter your 4 cards in order (e.g., "A♠ 5♥ K♦ 2♣"):</p>
+            <input type="text" id="card-recall-input" placeholder="Enter your cards..." style="width: 300px; margin: 10px 0;">
+            <div class="modal-buttons">
+              <button class="challenge-btn" onclick="submitCardRecall(${playerIndex})">Submit Cards</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('card-recall-input').focus();
+      } else {
+        // Show waiting message
+        showGameMessage(`${currentPlayerName} is reciting their cards...`, 10000);
+      }
+    }
+
+    function submitCardRecall(playerIndex) {
+      const input = document.getElementById('card-recall-input');
+      const recalledCards = input.value.trim();
+      
+      if (!recalledCards) {
+        showGameMessage('Please enter your cards!');
+        return;
+      }
+      
+      // Remove the modal
+      const modal = document.querySelector('.modal');
+      if (modal) modal.remove();
+      
+      // Send recalled cards to server for verification
+      socket.emit('verifyCardRecall', {
+        gameCode,
+        playerId: myPlayerId,
+        playerIndex,
+        recalledCards
+      });
+    }
+
+    // Add socket listener for card recall results
+    function handleCardRecallResult(data) {
+      if (data.correct) {
+        showGameMessage(`${data.playerName} got their cards right!`, 3000);
+      } else {
+        showGameMessage(`${data.playerName} got it wrong! Finish your drink! 🍺`, 5000);
+        // Add penalty drinks
+        if (data.playerId === myPlayerId) {
+          updateDrinkCount(myPlayerId, 5); // Finish drink = 5 drinks
+        }
+      }
+      
+      // Continue to next player after a delay
+      setTimeout(() => {
+        showCardRecallInput(data.nextPlayerIndex);
+      }, 2000);
     }
 
     function makeSomeoneDrink() {
@@ -1077,7 +1184,12 @@
       document.getElementById('auto-start-btn').style.display = 'none';
       document.getElementById('memorize-btn').style.display = 'none';
       document.getElementById('pyramid-btn').style.display = 'none';
-      document.getElementById('recall-btn').style.display = 'none';
+      
+      // Remove any existing restart button
+      const existingRestartBtn = document.getElementById('restart-btn');
+      if (existingRestartBtn) {
+        existingRestartBtn.remove();
+      }
       
       switch(phase) {
         case 'setup':
@@ -1126,19 +1238,33 @@
           }
           break;
           
+        case 'recall':
+          phaseDisplay.textContent = 'Phase: Card Recall - Recite Your Cards!';
+          timerDisplay.style.display = 'none';
+          cardDisplay.style.display = 'none';
+          currentTurn.textContent = 'Recall Phase';
+          break;
+          
         case 'finished':
           phaseDisplay.textContent = 'Phase: Game Complete!';
           timerDisplay.style.display = 'none';
           cardDisplay.style.display = 'none';
           currentTurn.textContent = 'Game Finished!';
           
-          // Show restart button only for host
-          if (isHost) {
+          // Show restart button only for host (and only once)
+          if (isHost && !document.getElementById('restart-btn')) {
             const restartBtn = document.createElement('button');
+            restartBtn.id = 'restart-btn';
             restartBtn.textContent = 'Restart Game';
             restartBtn.style.backgroundColor = '#27ae60';
             restartBtn.style.color = 'white';
-            restartBtn.onclick = () => restartGame();
+            restartBtn.style.padding = '8px 12px';
+            restartBtn.style.fontSize = '0.8rem';
+            restartBtn.style.margin = '2px';
+            restartBtn.onclick = () => {
+              restartGame();
+              restartBtn.remove(); // Remove button after clicking
+            };
             
             const phaseActions = document.querySelector('.phase-actions');
             phaseActions.appendChild(restartBtn);
