@@ -825,6 +825,15 @@
       }
     }
 
+    function restartGame() {
+      if (isHost) {
+        socket.emit('gameAction', {
+          gameCode,
+          action: 'restartGame'
+        });
+      }
+    }
+
     function makeSomeoneDrink() {
       if (!gameState.currentPyramidCard) {
         showGameMessage("Wait for a pyramid card to be flipped first!");
@@ -928,6 +937,14 @@
       gamePhase = gameState.phase;
       currentPyramidCard = gameState.currentPyramidCard;
       
+      // Update player hands from server state
+      if (gameState.playerHands) {
+        Object.entries(gameState.playerHands).forEach(([playerId, cards]) => {
+          playerHands[playerId] = cards;
+          updatePlayerCardsDisplay(playerId, cards);
+        });
+      }
+      
       // Update drink counts
       Object.entries(gameState.drinkCounts || {}).forEach(([playerId, count]) => {
         drinkCounts[playerId] = count;
@@ -950,8 +967,49 @@
         document.getElementById('current-card').textContent = currentPyramidCard;
       }
       
-      // Show player actions for current player
-      showPlayerActions(gamePhase === 'pyramid' && isHost);
+      // Show player actions for current player during pyramid phase
+      showPlayerActions(gamePhase === 'pyramid');
+    }
+
+    function updatePlayerCardsDisplay(playerId, cards) {
+      const playerCards = document.getElementById(`cards-${playerId}`);
+      if (!playerCards) return;
+      
+      playerCards.innerHTML = '';
+      cards.forEach(card => {
+        const cardEl = createPlayerCard(card, playerId);
+        playerCards.appendChild(cardEl);
+      });
+    }
+
+    function createPlayerCard(card, playerId) {
+      const cardContainer = document.createElement('div');
+      cardContainer.className = 'card';
+
+      const inner = document.createElement('div');
+      inner.className = 'card-inner';
+
+      const front = document.createElement('div');
+      front.className = 'card-front';
+      front.textContent = `${card.value}${card.suit}`;
+      if (card.suit === '♥' || card.suit === '♦') front.style.color = 'red';
+
+      const back = document.createElement('div');
+      back.className = 'card-back';
+      back.textContent = '🂠';
+
+      inner.appendChild(front);
+      inner.appendChild(back);
+      cardContainer.appendChild(inner);
+
+      cardContainer.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (gamePhase === 'memorize' && playerId === myPlayerId) {
+          cardContainer.classList.toggle('flipped');
+        }
+      });
+
+      return cardContainer;
     }
 
     function updatePyramidFromState(pyramidCards) {
@@ -1015,16 +1073,35 @@
       const cardDisplay = document.getElementById('current-card-display');
       const currentTurn = document.getElementById('current-turn');
       
+      // Hide all buttons first
+      document.getElementById('auto-start-btn').style.display = 'none';
+      document.getElementById('memorize-btn').style.display = 'none';
+      document.getElementById('pyramid-btn').style.display = 'none';
+      document.getElementById('recall-btn').style.display = 'none';
+      
       switch(phase) {
         case 'setup':
-          phaseDisplay.textContent = 'Phase: Cards dealt - Ready to memorize';
+          phaseDisplay.textContent = 'Phase: Ready to deal cards';
           timerDisplay.style.display = 'none';
           cardDisplay.style.display = 'none';
           currentTurn.textContent = 'Ready to Start!';
           
-          // Show controls only for host
-          document.getElementById('auto-start-btn').style.display = isHost ? 'block' : 'none';
-          document.getElementById('memorize-btn').style.display = isHost ? 'block' : 'none';
+          // Show auto-start button only for host
+          if (isHost) {
+            document.getElementById('auto-start-btn').style.display = 'block';
+          }
+          break;
+          
+        case 'dealt':
+          phaseDisplay.textContent = 'Phase: Cards dealt - Ready to memorize';
+          timerDisplay.style.display = 'none';
+          cardDisplay.style.display = 'none';
+          currentTurn.textContent = 'Cards Ready!';
+          
+          // Show memorize button only for host
+          if (isHost) {
+            document.getElementById('memorize-btn').style.display = 'block';
+          }
           break;
           
         case 'memorize':
@@ -1044,16 +1121,28 @@
           currentTurn.textContent = 'Playing the Pyramid';
           
           // Show pyramid controls only for host
-          document.getElementById('pyramid-btn').style.display = isHost ? 'block' : 'none';
-          document.getElementById('recall-btn').style.display = isHost ? 'block' : 'none';
+          if (isHost) {
+            document.getElementById('pyramid-btn').style.display = 'block';
+          }
           break;
           
-        case 'recall':
-          phaseDisplay.textContent = 'Phase: Recall Your Cards';
+        case 'finished':
+          phaseDisplay.textContent = 'Phase: Game Complete!';
           timerDisplay.style.display = 'none';
           cardDisplay.style.display = 'none';
-          currentTurn.textContent = 'Card Recall Phase';
-          currentTurn.className = 'recall-phase';
+          currentTurn.textContent = 'Game Finished!';
+          
+          // Show restart button only for host
+          if (isHost) {
+            const restartBtn = document.createElement('button');
+            restartBtn.textContent = 'Restart Game';
+            restartBtn.style.backgroundColor = '#27ae60';
+            restartBtn.style.color = 'white';
+            restartBtn.onclick = () => restartGame();
+            
+            const phaseActions = document.querySelector('.phase-actions');
+            phaseActions.appendChild(restartBtn);
+          }
           break;
       }
     }
