@@ -7,12 +7,9 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
-// *** THE FIX IS HERE ***
-// The CORS configuration is updated to allow any origin, which is
-// necessary for local development when the client and server are on different ports.
 const io = socketIo(server, {
   cors: {
-    origin: "*", // Allows connections from any origin
+    origin: "*", // Allows connections from any origin for local development
     methods: ["GET", "POST"]
   }
 });
@@ -50,12 +47,15 @@ function createGame(hostId, hostName) {
 }
 
 function buildPyramid(game) {
-  const playerCount = game.playerOrder.length;
-  const rows = playerCount < 8 ? 4 : 3;
+  // *** FIX 1: Pyramid size is now correctly set to 6 rows ***
+  const rows = 6;
   game.pyramidCards = [];
   for (let row = 1; row <= rows; row++) {
     for (let i = 0; i < row; i++) {
-      if (game.deck.length > 0) { const card = game.deck.pop(); game.pyramidCards.push({ ...card, revealed: false }); }
+      if (game.deck.length > 0) {
+        const card = game.deck.pop();
+        game.pyramidCards.push({ ...card, revealed: false });
+      }
     }
   }
 }
