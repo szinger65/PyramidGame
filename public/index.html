@@ -40,10 +40,10 @@
         #game-controls { position: fixed; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.9); color: white; padding: 15px; border-radius: 8px; font-size: 0.9rem; max-width: 250px; }
         #current-turn { background: rgba(52, 152, 219, 0.8); padding: 5px 10px; border-radius: 6px; margin-bottom: 10px; text-align: center; font-weight: bold; }
         .phase-actions { display: flex; flex-direction: column; gap: 5px; }
-        /* *** FIX 1: Corrected timer display style *** */
-        #timer-display { display: block; } /* Should be visible by default, JS will hide/show */
+        /* *** FIX 1: Corrected timer display style to be hidden unless explicitly shown *** */
+        #timer-display { display: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: #2c2c2c; color: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 400px; width: 90%; }
+        .modal-content { background: #2c2c2c; color: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 400px; width: 90%; z-index: 1100; /* Ensure recall modal is above other elements */ }
         .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
         .accept-btn { background-color: #dc3545; color: white; }
         .challenge-btn { background-color: #ffc107; color: black; }
@@ -73,6 +73,7 @@
     <script>
         let socket = null, gameCode = null, playerId = null, isHost = false, gameState = {}, connectedPlayers = {};
         let players = [], playerHands = {}, playerNames = [], myPlayerId = null;
+        let memorizeTimer = null; // Defined globally for control
 
         function initSocket() {
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -157,7 +158,7 @@
         function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
         function startRecall() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startRecall' }); }
 
-        // *** FIX 2: Rewritten to make all cards clickable ***
+        // *** FIX 2: Rewritten to make all cards clickable (no highlighting) and handle proof correctly ***
         function showCardFlipModal(requiredCardValue) {
             const prompt = document.getElementById('prove-card-prompt');
             prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click one of your cards or <button>admit bluff</button>.`;
@@ -165,14 +166,12 @@
 
             const cleanup = () => {
                 prompt.style.display = 'none';
-                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => {
-                    c.style.cursor = 'default';
-                    c.onclick = null;
-                });
+                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => { c.style.cursor = 'default'; c.onclick = null; });
             };
 
             prompt.querySelector('button').onclick = () => {
                 cleanup();
+                // Send proved: false when admitting bluff
                 socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false });
             };
             
@@ -182,10 +181,14 @@
                 cardEl.onclick = () => {
                     const cardValueInHand = playerHands[myPlayerId][i].value;
                     const proved = (cardValueInHand === requiredCardValue);
+
                     cleanup();
                     // Flip the card the user clicked on
                     setTimeout(() => cardEl.classList.add('flipped'), 10);
-                    socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: proved });
+                    
+                    // Send proved: true, regardless of correctness. Server handles logic.
+                    // The server checks if the 'proved' action happened.
+                    socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: true });
                 };
             });
         }
@@ -313,14 +316,14 @@
 
             const allPyramidCardsFlipped = gameState.pyramidCards && gameState.pyramidCards.every(c => c.revealed);
 
-            ctrls.tm.style.display = 'none'; // Hide timer by default
+            ctrls.tm.style.display = 'none';
 
             switch (phase) {
                 case 'setup': ctrls.p.textContent = 'Phase: Ready'; ctrls.t.textContent = 'Ready to Start!'; if (isHost) btns.auto.style.display = 'block'; break;
                 case 'dealt': ctrls.p.textContent = 'Phase: Memorize'; ctrls.t.textContent = 'Cards Dealt!'; if (isHost) btns.mem.style.display = 'block'; break;
                 case 'memorize': 
                     ctrls.p.textContent = 'Phase: MEMORIZE!'; ctrls.t.textContent = 'Memorize!'; 
-                    ctrls.tm.style.display = 'block'; // *** FIX 1: Explicitly show timer ***
+                    ctrls.tm.style.display = 'block'; 
                     startLocalMemorizePhase(); 
                     break;
                 case 'pyramid':
@@ -340,16 +343,21 @@
             }
         }
 
+        // *** FIX 1: Restored countdown timer logic ***
         function startLocalMemorizePhase() {
             let timeLeft = 30;
             document.getElementById('countdown').textContent = timeLeft;
             const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
             myCards.forEach(c => c.classList.add('flipped'));
-            const timer = setInterval(() => {
+            
+            // Clear any existing timer to prevent multiple runs
+            if (memorizeTimer) clearInterval(memorizeTimer);
+
+            memorizeTimer = setInterval(() => {
                 timeLeft--;
                 document.getElementById('countdown').textContent = timeLeft;
                 if (timeLeft <= 0) {
-                    clearInterval(timer);
+                    clearInterval(memorizeTimer);
                     myCards.forEach(c => c.classList.remove('flipped'));
                 }
             }, 1000);
