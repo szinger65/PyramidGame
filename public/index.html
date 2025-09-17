@@ -433,7 +433,7 @@
         <div id="host-players-list"></div>
       </div>
 
-      <button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game (Need 3+ players)</button>
+      <button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game (Need 2+ players)</button>
     </div>
   </div>
 
@@ -694,7 +694,7 @@
       // Update start button state
       const startBtn = document.getElementById('start-game-btn');
       if (startBtn) {
-        const needed = Math.max(0, 3 - playerCount);
+        const needed = Math.max(0, 2 - playerCount);
         startBtn.disabled = playerCount < 3;
         startBtn.textContent = needed > 0 ? 
           `Start Game (Need ${needed} more player${needed !== 1 ? 's' : ''})` : 
