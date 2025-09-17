@@ -67,7 +67,7 @@ function createGame(hostId, hostName) {
     currentPyramidCard: null,
     flipIndex: 0,
     currentRecallPlayer: 0,
-    activeBluff: null // To track who is challenging whom
+    activeBluff: null
   };
   
   game.players[hostId] = { id: hostId, name: hostName, isHost: true, connected: true };
@@ -160,8 +160,13 @@ io.on('connection', (socket) => {
       playerSockets.set(socket.id, socket);
       socket.join(data.gameCode);
       
+      // Notify the joining player that they succeeded
       socket.emit('gameJoined', { gameCode: data.gameCode, playerId: socket.id, players: game.players });
-      socket.to(data.gameCode).emit('playerJoined', { playerId: socket.id, player: game.players[socket.id] });
+      
+      // *** THE FIX IS HERE ***
+      // Notify EVERYONE in the room (including the new player) with the complete list of players.
+      broadcastToGame(data.gameCode, 'playerJoined', { players: game.players });
+      
       console.log(`${data.playerName} joined game ${data.gameCode}`);
     } catch (error) {
       socket.emit('error', { message: 'Failed to join game' });
@@ -172,8 +177,6 @@ io.on('connection', (socket) => {
     try {
       const game = games.get(data.gameCode);
       if (!game || game.host !== socket.id) return socket.emit('error', { message: 'Only host can start' });
-      
-      // *** FIX 1: Changed from > 3 to >= 3 ***
       if (game.playerOrder.length < 3) return socket.emit('error', { message: 'Need at least 3 players' });
       
       game.phase = 'setup';
@@ -240,7 +243,6 @@ io.on('connection', (socket) => {
   socket.on('challenge', (data) => {
     const game = games.get(data.gameCode);
     if (!game) return;
-    // Store the active bluff details
     game.activeBluff = { challengerId: data.challengerId, targetId: data.targetId };
     broadcastToGame(data.gameCode, 'challengeReceived', data);
   });
@@ -255,7 +257,6 @@ io.on('connection', (socket) => {
 
     if (data.response === 'accept') {
       game.drinkCounts[targetId]++;
-      // *** FIX 2: Broadcast result message to everyone ***
       broadcastToGame(data.gameCode, 'challengeResult', {
         message: `${targetName} takes the drink! 🍺`
       });
@@ -266,13 +267,12 @@ io.on('connection', (socket) => {
 
       const cardValue = game.currentPyramidCard.replace(/[♠♥♦♣]/g, '');
       const challengerSocket = playerSockets.get(challengerId);
-      // *** FIX 3: Send a specific event to the challenger to prove their card ***
       if (challengerSocket) {
         challengerSocket.emit('proveYourCard', { cardValue });
       }
     }
     
-    game.activeBluff = null; // Clear the active bluff
+    game.activeBluff = null;
     broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
   });
 
@@ -282,7 +282,6 @@ io.on('connection', (socket) => {
     
     const challengerId = socket.id;
     const challengerName = game.players[challengerId]?.name;
-    // Find who the target was (this is a simplification; a more robust system would store this)
     const targetId = Object.keys(game.players).find(pId => pId !== challengerId && game.activeBluff?.targetId === pId);
     const targetName = game.players[targetId]?.name || 'The target';
 
@@ -291,7 +290,7 @@ io.on('connection', (socket) => {
     if (hasCard) {
       broadcastToGame(data.gameCode, 'challengeResult', {
         message: `${challengerName} proves they have the card! ${targetName} drinks twice! 🍺🍺`,
-        reveal: { playerId: challengerId, cardValue: data.cardValue } // Tell clients to flip the card
+        reveal: { playerId: challengerId, cardValue: data.cardValue }
       });
       if(targetId) game.drinkCounts[targetId] += 2;
     } else {
@@ -323,12 +322,11 @@ io.on('connection', (socket) => {
       nextPlayerIndex: playerIndex + 1
     });
 
-    // *** FIX 4 & 5: Server automatically ends the game after the last player ***
     if (playerIndex + 1 >= game.playerOrder.length) {
       game.phase = 'finished';
       setTimeout(() => {
         broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
-      }, 3000); // Give clients time to see the last result
+      }, 3000);
     }
     
     broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
@@ -349,7 +347,7 @@ io.on('connection', (socket) => {
         if (game.playerOrder.length === 0) {
           games.delete(gameCode);
         } else {
-          broadcastToGame(gameCode, 'playerLeft', { playerId: socket.id, players: game.players });
+          broadcastToGame(gameCode, 'playerLeft', { players: game.players });
         }
         break;
       }
@@ -361,4 +359,4 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Pyramid Card Game server running on port ${PORT}`);
-});
+});```
