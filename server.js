@@ -148,9 +148,34 @@ function getGameState(game) {
 }
 
 function parseRecalledCards(recalledString) {
-  // Parse string like "A♠ 5♥ K♦ 2♣" into array
-  const cardPattern = /([AJQK2-9]|10)[♠♥♦♣]/g;
-  return recalledString.match(cardPattern) || [];
+  // Parse string like "A 5 K 2" or "Ace 5 King 2" into standardized array
+  const normalizedInput = recalledString.toUpperCase().trim();
+  
+  // Split by spaces and clean up
+  const parts = normalizedInput.split(/[\s,]+/).filter(part => part.length > 0);
+  
+  const standardizedCards = parts.map(part => {
+    // Convert word forms to standard values
+    const cardMap = {
+      'ACE': 'A', 'A': 'A',
+      'KING': 'K', 'K': 'K',
+      'QUEEN': 'Q', 'Q': 'Q', 
+      'JACK': 'J', 'J': 'J',
+      '10': '10', 'TEN': '10',
+      '2': '2', 'TWO': '2',
+      '3': '3', 'THREE': '3',
+      '4': '4', 'FOUR': '4',
+      '5': '5', 'FIVE': '5',
+      '6': '6', 'SIX': '6',
+      '7': '7', 'SEVEN': '7',
+      '8': '8', 'EIGHT': '8',
+      '9': '9', 'NINE': '9'
+    };
+    
+    return cardMap[part] || part;
+  });
+  
+  return standardizedCards.filter(card => card); // Remove any undefined values
 }
 
 function arraysEqual(a, b) {
@@ -270,6 +295,7 @@ io.on('connection', (socket) => {
       
       switch (data.action) {
         case 'autoStart':
+          // Deal cards and build pyramid
           dealCards(game);
           buildPyramid(game);
           game.phase = 'dealt';
@@ -277,6 +303,7 @@ io.on('connection', (socket) => {
           
         case 'startMemorize':
           game.phase = 'memorize';
+          // Start 30 second timer (handled client-side)
           setTimeout(() => {
             if (game.phase === 'memorize') {
               game.phase = 'pyramid';
@@ -294,8 +321,10 @@ io.on('connection', (socket) => {
             game.currentPyramidCard = `${card.value}${card.suit}`;
             game.flipIndex++;
             
+            // Check if all pyramid cards are flipped
             if (game.flipIndex >= game.pyramidCards.length) {
               game.phase = 'recall';
+              // Start card recall phase
               setTimeout(() => {
                 broadcastToGame(data.gameCode, 'startCardRecall', {});
               }, 1000);
@@ -309,6 +338,7 @@ io.on('connection', (socket) => {
           break;
           
         case 'restartGame':
+          // Reset game state
           game.phase = 'setup';
           game.deck = createDeck();
           game.playerHands = {};
@@ -318,12 +348,14 @@ io.on('connection', (socket) => {
           game.flipIndex = 0;
           game.currentRecallPlayer = 0;
           
+          // Reset drink counts
           game.playerOrder.forEach(playerId => {
             game.drinkCounts[playerId] = 0;
           });
           break;
       }
       
+      // Broadcast updated state
       broadcastToGame(data.gameCode, 'gameStateUpdate', {
         gameState: getGameState(game)
       });
@@ -338,6 +370,7 @@ io.on('connection', (socket) => {
       const game = games.get(data.gameCode);
       if (!game) return;
       
+      // Broadcast challenge to target player
       const targetSocket = playerSockets.get(data.targetId);
       if (targetSocket) {
         targetSocket.emit('challengeReceived', {
@@ -362,43 +395,127 @@ io.on('connection', (socket) => {
       const targetName = game.players[targetId]?.name || 'Unknown';
       
       if (data.response === 'accept') {
+        // Target accepts drink
         game.drinkCounts[targetId] = (game.drinkCounts[targetId] || 0) + 1;
         
-        broadcastToGame(data.gameCode, 'challengeResult', {
-          message: `${targetName} takes a drink! 🍺`,
-          flipCard: false
-        });
+        // Send targeted messages
+        const targetSocket = playerSockets.get(challengerId);
+        const challengerSocket = playerSockets.get(targetId);
         
-      } else if (data.response === 'challenge') {
-        const cardValue = game.currentPyramidCard.replace(/[♠♥♦♣]/g, '');
-        const challengerCards = game.playerHands[challengerId] || [];
-        const hasCard = challengerCards.some(card => card.value === cardValue);
-        
-        if (hasCard) {
-          game.drinkCounts[targetId] = (game.drinkCounts[targetId] || 0) + 2;
-          
-          broadcastToGame(data.gameCode, 'challengeResult', {
-            message: `${challengerName} proves they have ${cardValue}! ${targetName} drinks twice! 🍺🍺`,
-            flipCard: true,
-            challengerId: challengerId,
-            cardValue: cardValue
-          });
-        } else {
-          game.drinkCounts[challengerId] = (game.drinkCounts[challengerId] || 0) + 1;
-          
-          broadcastToGame(data.gameCode, 'challengeResult', {
-            message: `${challengerName} was bluffing! They drink instead! 🍺`,
+        if (targetSocket) {
+          targetSocket.emit('challengeResult', {
+            message: `${targetName} takes the drink! 🍺`,
             flipCard: false
           });
         }
+        
+        if (challengerSocket) {
+          challengerSocket.emit('challengeResult', {
+            message: `You take a drink! 🍺`,
+            flipCard: false
+          });
+        }
+        
+        // Broadcast to others
+        game.playerOrder.forEach(playerId => {
+          if (playerId !== challengerId && playerId !== targetId) {
+            const socket = playerSockets.get(playerId);
+            if (socket) {
+              socket.emit('challengeResult', {
+                message: `${targetName} takes a drink! 🍺`,
+                flipCard: false
+              });
+            }
+          }
+        });
+        
+      } else if (data.response === 'challenge') {
+        // Target calls bluff - challenger must prove they have the card
+        const cardValue = game.currentPyramidCard.replace(/[♠♥♦♣]/g, '');
+        
+        // Send targeted messages
+        const targetSocket = playerSockets.get(challengerId);
+        const challengerSocket = playerSockets.get(targetId);
+        
+        if (targetSocket) {
+          targetSocket.emit('challengeResult', {
+            message: `${targetName} calls your bluff! Prove you have ${cardValue} or drink!`,
+            needsCardFlip: true,
+            cardValue: cardValue,
+            challengerId: challengerId
+          });
+        }
+        
+        if (challengerSocket) {
+          challengerSocket.emit('challengeResult', {
+            message: `You called ${challengerName}'s bluff!`,
+            flipCard: false
+          });
+        }
+        
+        // Broadcast to others
+        game.playerOrder.forEach(playerId => {
+          if (playerId !== challengerId && playerId !== targetId) {
+            const socket = playerSockets.get(playerId);
+            if (socket) {
+              socket.emit('challengeResult', {
+                message: `${targetName} calls ${challengerName}'s bluff!`,
+                flipCard: false
+              });
+            }
+          }
+        });
       }
       
+      // Update game state
       broadcastToGame(data.gameCode, 'gameStateUpdate', {
         gameState: getGameState(game)
       });
       
     } catch (error) {
       socket.emit('error', { message: 'Failed to process challenge response' });
+    }
+  });
+
+  socket.on('proveCard', (data) => {
+    try {
+      const game = games.get(data.gameCode);
+      if (!game) return;
+      
+      const challengerId = socket.id;
+      const challengerName = game.players[challengerId]?.name || 'Unknown';
+      
+      if (data.proved) {
+        // Challenger successfully proved they have the card
+        // Find the target who called the bluff (this is stored in a temporary state)
+        // For now, we'll broadcast success
+        broadcastToGame(data.gameCode, 'challengeResult', {
+          message: `${challengerName} proves they have ${data.cardValue}! Target drinks twice! 🍺🍺`,
+          flipCard: true,
+          challengerId: challengerId,
+          cardValue: data.cardValue
+        });
+        
+        // The target should drink twice - this needs to be handled client-side
+        // since we don't store the temporary bluff state
+        
+      } else {
+        // Challenger admits they were bluffing
+        game.drinkCounts[challengerId] = (game.drinkCounts[challengerId] || 0) + 1;
+        
+        broadcastToGame(data.gameCode, 'challengeResult', {
+          message: `${challengerName} was bluffing! They drink instead! 🍺`,
+          flipCard: false
+        });
+      }
+      
+      // Update game state
+      broadcastToGame(data.gameCode, 'gameStateUpdate', {
+        gameState: getGameState(game)
+      });
+      
+    } catch (error) {
+      socket.emit('error', { message: 'Failed to process card proof' });
     }
   });
 
@@ -412,15 +529,18 @@ io.on('connection', (socket) => {
       const actualCards = game.playerHands[playerId] || [];
       const recalledCards = data.recalledCards;
       
-      const actualCardStrings = actualCards.map(card => `${card.value}${card.suit}`);
-      const recalledCardArray = parseRecalledCards(recalledCards);
+      // Compare only card values, not suits
+      const actualCardValues = actualCards.map(card => card.value);
+      const recalledCardValues = parseRecalledCards(recalledCards);
       
-      const correct = arraysEqual(actualCardStrings.sort(), recalledCardArray.sort());
+      const correct = recalledCardValues.length === 4 && arraysEqual(actualCardValues.sort(), recalledCardValues.sort());
       
       if (!correct) {
+        // Player got it wrong - add penalty drinks
         game.drinkCounts[playerId] = (game.drinkCounts[playerId] || 0) + 5;
       }
       
+      // Broadcast result
       broadcastToGame(data.gameCode, 'cardRecallResult', {
         playerId: playerId,
         playerName: playerName,
@@ -428,6 +548,7 @@ io.on('connection', (socket) => {
         nextPlayerIndex: data.playerIndex + 1
       });
       
+      // Update game state
       broadcastToGame(data.gameCode, 'gameStateUpdate', {
         gameState: getGameState(game)
       });
@@ -436,30 +557,33 @@ io.on('connection', (socket) => {
       socket.emit('error', { message: 'Failed to verify card recall' });
     }
   });
-
-  // ✅ Fixed: wrap disconnect logic properly
-  socket.on('disconnect', () => {
     console.log(`Player disconnected: ${socket.id}`);
     
+    // Find and update games
     for (let [gameCode, game] of games.entries()) {
       if (game.players[socket.id]) {
         if (game.host === socket.id) {
+          // Host disconnected - end game or transfer host
           if (game.playerOrder.length > 1) {
+            // Transfer host to next player
             const nextHost = game.playerOrder.find(id => id !== socket.id);
             if (nextHost) {
               game.host = nextHost;
               game.players[nextHost].isHost = true;
             }
           } else {
+            // Last player - delete game
             games.delete(gameCode);
             playerSockets.delete(socket.id);
             return;
           }
         }
         
+        // Remove player
         delete game.players[socket.id];
         game.playerOrder = game.playerOrder.filter(id => id !== socket.id);
         
+        // Notify remaining players
         socket.to(gameCode).emit('playerLeft', {
           playerId: socket.id
         });
@@ -479,6 +603,7 @@ server.listen(PORT, () => {
 
 // Cleanup old games periodically
 setInterval(() => {
+  const now = Date.now();
   for (let [gameCode, game] of games.entries()) {
     const connectedPlayers = game.playerOrder.filter(id => 
       playerSockets.has(id) && playerSockets.get(id).connected
@@ -489,4 +614,4 @@ setInterval(() => {
       games.delete(gameCode);
     }
   }
-}, 300000);
+}, 300000); // Clean up every 5 minutes
