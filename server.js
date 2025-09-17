@@ -15,18 +15,13 @@ const io = socketIo(server, {
 });
 
 // *** THE FINAL FIX IS HERE ***
-// process.cwd() is the directory where you run the 'node' command from.
-// On Render, this is your project's root directory. This is the most reliable way.
-const ROOT_DIR = process.cwd();
+// 1. Tell Express that the 'public' folder is where to find static files like index.html.
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve static files (like index.html) from the project's root directory.
-app.use(express.static(ROOT_DIR));
-
-// Explicitly serve the index.html file for the main URL.
+// 2. When a user goes to the main URL ('/'), send them the index.html file from inside the 'public' folder.
 app.get('/', (req, res) => {
-    res.sendFile(path.join(ROOT_DIR, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
 
 app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() }));
 
