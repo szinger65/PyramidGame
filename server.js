@@ -14,7 +14,17 @@ const io = socketIo(server, {
   }
 });
 
-app.use(express.static('.'));
+// *** THE FIX IS HERE ***
+// 1. We tell Express to serve static files from the project's root directory.
+// This is important for CSS, images, or other files you might add later.
+app.use(express.static(path.join(__dirname)));
+
+// 2. We explicitly tell Express what to do when someone visits the main URL ("/").
+// It will send them the index.html file. This is the line that was missing.
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() }));
 
 const games = new Map();
@@ -121,10 +131,9 @@ io.on('connection', (socket) => {
           game.flipIndex++;
         }
         break;
-      // *** FIX 3: New action for host to manually start the recall phase ***
       case 'startRecall':
         game.phase = 'recall';
-        game.currentRecallPlayerIndex = 0; // Reset index
+        game.currentRecallPlayerIndex = 0;
         broadcastToGame(game.code, 'beginRecallTurn', { playerIndex: 0 });
         break;
       case 'restartGame':
@@ -183,7 +192,6 @@ io.on('connection', (socket) => {
     broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
   });
 
-  // *** FIX 3: Revamped recall logic to prevent skipping players ***
   socket.on('verifyCardRecall', (data) => {
     const game = games.get(data.gameCode);
     if (!game) return;
