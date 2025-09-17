@@ -40,10 +40,9 @@
         #game-controls { position: fixed; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.9); color: white; padding: 15px; border-radius: 8px; font-size: 0.9rem; max-width: 250px; }
         #current-turn { background: rgba(52, 152, 219, 0.8); padding: 5px 10px; border-radius: 6px; margin-bottom: 10px; text-align: center; font-weight: bold; }
         .phase-actions { display: flex; flex-direction: column; gap: 5px; }
-        /* *** FIX 1: Corrected timer display style to be hidden unless explicitly shown *** */
         #timer-display { display: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: #2c2c2c; color: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 400px; width: 90%; z-index: 1100; /* Ensure recall modal is above other elements */ }
+        .modal-content { background: #2c2c2c; color: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 400px; width: 90%; z-index: 1100; }
         .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
         .accept-btn { background-color: #dc3545; color: white; }
         .challenge-btn { background-color: #ffc107; color: black; }
@@ -64,7 +63,7 @@
     <div id="menu-screen" class="screen active"><h1>Pyramid Card Game</h1><button onclick="showHostScreen()">Host New Game</button><button onclick="showJoinScreen()">Join Game</button></div>
     <div id="host-screen" class="screen"><h1>Host New Game</h1><label>Your Name:</label><input type="text" id="host-name" value="Host"><button onclick="hostGame()" id="host-btn">Create Game</button><button onclick="showMenuScreen()">Back</button><div id="host-info" style="display:none;"><div class="connection-info"><h3>Game Created!</h3><p>Share this code:</p><div class="game-code" id="host-game-code">...</div></div><div class="players-list"><h4>Players in Game:</h4><div id="host-players-list"></div></div><button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game</button></div></div>
     <div id="join-screen" class="screen"><h1>Join Game</h1><label>Your Name:</label><input type="text" id="join-name" value="Player"><label>Game Code:</label><input type="text" id="game-code-input" style="text-transform:uppercase;"><button onclick="joinGame()" id="join-btn">Join</button><button onclick="showMenuScreen()">Back</button><div id="join-info" style="display:none;"><div class="connection-info"><h3>Joined Game!</h3><p>Waiting for host...</p></div><div class="players-list"><h4>Players in Game:</h4><div id="join-players-list"></div></div></div></div>
-    <div id="game-screen" class="screen"><h1>Pyramid Drinking Game</h1><div id="game-controls"><div id="current-turn">Setting Up...</div><div id="phase-display">Phase: Setup</div><div id="timer-display" style="display:none;">Time: <span id="countdown">30</span>s</div><div id="current-card-display" style="display:none;">Card: <span id="current-card"></span></div><div class="phase-actions"><button onclick="autoStart()" id="auto-start-btn" style="display:none;">Deal Cards</button><button onclick="startMemorizePhase()" id="memorize-btn" style="display:none;">Start Memorizing</button><button onclick="nextPyramidCard()" id="pyramid-btn" style="display:none;">Flip Next Card</button><button onclick="startRecall()" id="recall-btn" style="display:none;">Start Recall Phase</button></div><div id="prove-card-prompt" class="prove-prompt" style="display: none;"></div></div><div id="table"></div><div id="connection-status" class="connection-status disconnected">...</div></div>
+    <div id="game-screen" class="screen"><h1>Pyramid Drinking Game</h1><div id="game-controls"><div id="current-turn">Setting Up...</div><div id="phase-display">Phase: Setup</div><div id="timer-display">Time: <span id="countdown">30</span>s</div><div id="current-card-display" style="display:none;">Card: <span id="current-card"></span></div><div class="phase-actions"><button onclick="autoStart()" id="auto-start-btn" style="display:none;">Deal Cards</button><button onclick="startMemorizePhase()" id="memorize-btn" style="display:none;">Start Memorizing</button><button onclick="nextPyramidCard()" id="pyramid-btn" style="display:none;">Flip Next Card</button><button onclick="startRecall()" id="recall-btn" style="display:none;">Start Recall Phase</button></div><div id="prove-card-prompt" class="prove-prompt" style="display: none;"></div></div><div id="table"></div><div id="connection-status" class="connection-status disconnected">...</div></div>
     <div id="target-modal" class="modal"><div class="modal-content"><h3 id="target-message">Who drinks?</h3><div id="target-buttons" class="modal-buttons"></div></div></div>
     <div id="bluff-modal" class="modal"><div class="modal-content"><h3 id="bluff-message">...</h3><p>Do you believe them?</p><div class="modal-buttons"><button class="accept-btn" onclick="acceptDrink()">Take Drink</button><button class="challenge-btn" onclick="callBluff()">Call Bluff!</button></div></div></div>
     <div id="game-message" class="game-message"></div>
@@ -73,7 +72,7 @@
     <script>
         let socket = null, gameCode = null, playerId = null, isHost = false, gameState = {}, connectedPlayers = {};
         let players = [], playerHands = {}, playerNames = [], myPlayerId = null;
-        let memorizeTimer = null; // Defined globally for control
+        let memorizeTimer = null;
 
         function initSocket() {
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -158,7 +157,6 @@
         function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
         function startRecall() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startRecall' }); }
 
-        // *** FIX 2: Rewritten to make all cards clickable (no highlighting) and handle proof correctly ***
         function showCardFlipModal(requiredCardValue) {
             const prompt = document.getElementById('prove-card-prompt');
             prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click one of your cards or <button>admit bluff</button>.`;
@@ -166,15 +164,17 @@
 
             const cleanup = () => {
                 prompt.style.display = 'none';
-                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => { c.style.cursor = 'default'; c.onclick = null; });
+                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => {
+                    c.style.cursor = 'default';
+                    c.onclick = null;
+                });
             };
 
             prompt.querySelector('button').onclick = () => {
                 cleanup();
-                // Send proved: false when admitting bluff
                 socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false });
             };
-            
+
             const myCardElements = document.querySelectorAll(`#${myPlayerId} .card`);
             myCardElements.forEach((cardEl, i) => {
                 cardEl.style.cursor = 'pointer';
@@ -183,12 +183,11 @@
                     const proved = (cardValueInHand === requiredCardValue);
 
                     cleanup();
-                    // Flip the card the user clicked on
-                    setTimeout(() => cardEl.classList.add('flipped'), 10);
+                    cardEl.classList.add('flipped');
                     
-                    // Send proved: true, regardless of correctness. Server handles logic.
-                    // The server checks if the 'proved' action happened.
-                    socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: true });
+                    setTimeout(() => {
+                        socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: proved });
+                    }, 700);
                 };
             });
         }
@@ -254,7 +253,6 @@
             if (!gameState || !gameState.players) return;
             players = gameState.players; playerNames = gameState.playerNames;
             
-            // *** FIX 3: Force a table redraw on restart ***
             if (gameState.phase === 'setup' || document.querySelectorAll('.player').length !== players.length) {
                 setupGameTable();
             }
@@ -284,7 +282,8 @@
 
         function updatePyramidFromState(pyramidData) {
             const container = document.getElementById('pyramid');
-            if (!container.hasChildNodes()) {
+            if (!container.hasChildNodes() || pyramidData.length === 0) {
+                container.innerHTML = '';
                 let cardIndex = 0;
                 for (let rows = 1; cardIndex < pyramidData.length; rows++) {
                     const rowEl = document.createElement('div');
@@ -315,7 +314,6 @@
             if (document.getElementById('restart-btn')) document.getElementById('restart-btn').remove();
 
             const allPyramidCardsFlipped = gameState.pyramidCards && gameState.pyramidCards.every(c => c.revealed);
-
             ctrls.tm.style.display = 'none';
 
             switch (phase) {
@@ -343,14 +341,12 @@
             }
         }
 
-        // *** FIX 1: Restored countdown timer logic ***
         function startLocalMemorizePhase() {
             let timeLeft = 30;
             document.getElementById('countdown').textContent = timeLeft;
             const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
             myCards.forEach(c => c.classList.add('flipped'));
             
-            // Clear any existing timer to prevent multiple runs
             if (memorizeTimer) clearInterval(memorizeTimer);
 
             memorizeTimer = setInterval(() => {
