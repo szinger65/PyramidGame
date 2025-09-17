@@ -39,7 +39,6 @@
         .player-name { font-size: 0.85rem; font-weight: bold; white-space: nowrap; margin-bottom: 3px; }
         .drink-counter { background: rgba(220, 53, 69, 0.8); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; min-width: 20px; text-align: center; }
         .player-cards { display: flex; gap: 2px; flex-wrap: nowrap; justify-content: center; margin-bottom: 5px; }
-        .player-actions { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
         .card { width: 25px; height: 40px; perspective: 600px; cursor: default; }
         .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
         .card.flipped .card-inner { transform: rotateY(180deg); }
@@ -62,28 +61,9 @@
         .connection-status { position: fixed; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.9); color: white; padding: 10px; border-radius: 6px; font-size: 0.9rem; }
         .connection-status.connected { border: 2px solid #27ae60; }
         .connection-status.disconnected { border: 2px solid #e74c3c; }
-
-        /* *** FIX 3: Corrected button styles and added the new prompt style *** */
-        .action-btn {
-            padding: 3px 6px;
-            font-size: 0.65rem;
-            margin: 2px; /* Overrides the large default margin */
-        }
-        .prove-prompt {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #ffc107;
-            color: black;
-            border-radius: 6px;
-            text-align: center;
-        }
-        .prove-prompt button {
-            background-color: #dc3545;
-            color: white;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            margin-top: 5px;
-        }
+        .action-btn { padding: 3px 6px; font-size: 0.65rem; margin: 2px; }
+        .prove-prompt { margin-top: 15px; padding: 10px; background-color: #ffc107; color: black; border-radius: 6px; text-align: center; }
+        .prove-prompt button { background-color: #dc3545; color: white; padding: 5px 10px; font-size: 0.8rem; margin-top: 5px; }
     </style>
 </head>
 
@@ -94,6 +74,7 @@
         <button onclick="showHostScreen()">Host New Game</button>
         <button onclick="showJoinScreen()">Join Game</button>
     </div>
+
     <div id="host-screen" class="screen">
         <h1>🃏 Host New Game</h1>
         <label for="host-name">Your Name:</label>
@@ -113,6 +94,7 @@
             <button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game</button>
         </div>
     </div>
+
     <div id="join-screen" class="screen">
         <h1>🃏 Join Game</h1>
         <label for="join-name">Your Name:</label>
@@ -132,6 +114,7 @@
             </div>
         </div>
     </div>
+
     <div id="game-screen" class="screen">
         <h1>Pyramid Drinking Game</h1>
         <div id="game-controls">
@@ -144,16 +127,20 @@
                 <button onclick="startMemorizePhase()" id="memorize-btn" style="display:none;">Start Memorizing</button>
                 <button onclick="nextPyramidCard()" id="pyramid-btn" style="display:none;">Flip Next Card</button>
             </div>
+            <!-- This is the permanent home for the bluff prompt -->
+            <div id="prove-card-prompt" class="prove-prompt" style="display: none;"></div>
         </div>
         <div id="table"></div>
         <div id="connection-status" class="connection-status disconnected">...</div>
     </div>
+
     <div id="target-modal" class="modal">
         <div class="modal-content">
             <h3 id="target-message">Who drinks?</h3>
             <div id="target-buttons" class="modal-buttons"></div>
         </div>
     </div>
+
     <div id="bluff-modal" class="modal">
         <div class="modal-content">
             <h3 id="bluff-message">Player X wants you to drink!</h3>
@@ -164,6 +151,7 @@
             </div>
         </div>
     </div>
+
     <div id="game-message" class="game-message"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
@@ -277,18 +265,17 @@
         function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
 
         function showCardFlipModal(requiredCardValue) {
-            const existingPrompt = document.getElementById('prove-card-prompt');
-            if (existingPrompt) existingPrompt.remove();
-
-            const prompt = document.createElement('div');
-            prompt.id = 'prove-card-prompt';
-            prompt.className = 'prove-prompt';
+            const prompt = document.getElementById('prove-card-prompt');
             prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click the card or <button>admit bluff</button>.`;
-            document.getElementById('game-controls').appendChild(prompt);
+            prompt.style.display = 'block';
 
             const cleanup = () => {
-                prompt.remove();
-                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => { c.style.border = ''; c.style.cursor = 'default'; c.onclick = null; });
+                prompt.style.display = 'none';
+                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => {
+                    c.style.border = '';
+                    c.style.cursor = 'default';
+                    c.onclick = null;
+                });
             };
 
             prompt.querySelector('button').onclick = () => {
@@ -344,7 +331,9 @@
 
         function handleCardRecallResult(data) {
             showGameMessage(data.correct ? `${data.playerName} was correct!` : `${data.playerName} was wrong! Penalty! 🍺`, 2500);
-            setTimeout(() => showCardRecallInput(data.nextPlayerIndex), 2800);
+            if (data.nextPlayerIndex < players.length) {
+                setTimeout(() => showCardRecallInput(data.nextPlayerIndex), 2800);
+            }
         }
         
         function makeSomeoneDrink() {
@@ -399,6 +388,7 @@
             cards.forEach(card => container.appendChild(createCardElement(card)));
         }
 
+        // *** FIX 3: Restored the .card-inner div to fix the flip animation ***
         function createCardElement(card) {
             const el = document.createElement('div');
             el.className = 'card';
@@ -446,17 +436,18 @@
             }
         }
 
-        // *** FIX 2: This function now flips ALL player cards, not just the local one ***
+        // *** FIX 1: This function now only flips the local player's cards ***
         function startLocalMemorizePhase() {
             let timeLeft = 30;
             document.getElementById('countdown').textContent = timeLeft;
-            document.querySelectorAll('.player .card').forEach(c => c.classList.add('flipped'));
+            const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
+            myCards.forEach(c => c.classList.add('flipped'));
             const timer = setInterval(() => {
                 timeLeft--;
                 document.getElementById('countdown').textContent = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(timer);
-                    document.querySelectorAll('.player .card').forEach(c => c.classList.remove('flipped'));
+                    myCards.forEach(c => c.classList.remove('flipped'));
                 }
             }, 1000);
         }
