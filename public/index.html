@@ -541,11 +541,13 @@
     let currentRecallPlayer = 0;
     let myPlayerId = null;
 
-    // Initialize socket connection
+    // ***** CORRECTED SECTION STARTS HERE *****
+    // This function now correctly handles both local and deployed environments.
     function initSocket() {
       // Auto-detect environment and connect appropriately
-      // For Render deployment, the server will be at the same origin, so 'undefined' is correct.
-      const socketUrl = undefined;
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      // When local, connect to the Node.js server port. When deployed, connect to the same origin.
+      const socketUrl = isLocal ? 'http://localhost:3000' : undefined; 
       
       socket = io(socketUrl);
       
@@ -615,6 +617,15 @@
         document.getElementById('join-btn').disabled = false;
       });
 
+      socket.on('connect_error', (err) => {
+        console.error('Connection failed:', err.message);
+        updateConnectionStatus(false);
+        showGameMessage('Could not connect to the server. Is it running?');
+      });
+    }
+    // ***** CORRECTED SECTION ENDS HERE *****
+    
+    // This function has been removed from inside initSocket() to be globally accessible
     function restartGame() {
       if (isHost) {
         socket.emit('gameAction', {
@@ -622,7 +633,6 @@
           action: 'restartGame'
         });
       }
-    }
     }
 
     // Screen navigation
@@ -732,14 +742,12 @@
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('game-screen').classList.add('active');
       
-      // Set up game from server state
       playerNames = gameState.playerNames;
       players = gameState.players;
       myPlayerId = playerId;
       
       setupGameTable();
       
-      // Show auto-start button only for host
       if (isHost) {
         document.getElementById('auto-start-btn').style.display = 'block';
       }
@@ -751,63 +759,39 @@
       const table = document.getElementById('table');
       table.innerHTML = '<div id="pyramid" class="pyramid"></div>';
 
-      const radius = 300;
-      const centerX = 140;
-      const centerY = 180;
-      const angleStep = 360 / players.length;
+      const radius = 250;
+      const centerX = table.offsetWidth / 2;
+      const centerY = table.offsetHeight / 2;
+      const angleStep = (2 * Math.PI) / players.length;
 
-      players.forEach((playerId, i) => {
-        const angle = angleStep * i;
-        const x = centerX + radius * Math.cos((angle - 90) * Math.PI / 180);
-        const y = centerY + radius * Math.sin((angle - 90) * Math.PI / 180);
+      players.forEach((pId, i) => {
+        const angle = angleStep * i - (Math.PI / 2);
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
       
-        const player = document.createElement('div');
-        player.className = 'player';
-        player.id = playerId;
-        player.style.left = `${x}px`;
-        player.style.top = `${y}px`;
-        player.style.transform = 'translate(-50%, -50%)';
+        const playerEl = document.createElement('div');
+        playerEl.className = 'player';
+        playerEl.id = pId;
+        playerEl.style.left = `${x}px`;
+        playerEl.style.top = `${y}px`;
+        playerEl.style.transform = 'translate(-50%, -50%)';
         
-        if (playerId === myPlayerId) {
-          player.classList.add('current-user');
-        }
+        if (pId === myPlayerId) playerEl.classList.add('current-user');
+        if (connectedPlayers[pId]?.isHost) playerEl.classList.add('is-host');
         
-        if (connectedPlayers[playerId]?.isHost) {
-          player.classList.add('is-host');
-        }
+        playerHands[pId] = [];
+        drinkCounts[pId] = 0;
         
-        playerHands[playerId] = [];
-        drinkCounts[playerId] = 0;
+        playerEl.innerHTML = `
+          <div class="player-header">
+            <div class="player-name">${playerNames[i]}</div>
+            <div class="drink-counter" id="drinks-${pId}">Drinks: 0</div>
+          </div>
+          <div class="player-cards" id="cards-${pId}"></div>
+          <div class="player-actions" id="actions-${pId}" style="display:none;"></div>
+        `;
         
-        const playerHeader = document.createElement('div');
-        playerHeader.className = 'player-header';
-        
-        const nameLabel = document.createElement('div');
-        nameLabel.className = 'player-name';
-        nameLabel.textContent = playerNames[i];
-        
-        const drinkCounter = document.createElement('div');
-        drinkCounter.className = 'drink-counter';
-        drinkCounter.id = `drinks-${playerId}`;
-        drinkCounter.textContent = `Drinks: 0`;
-        
-        playerHeader.appendChild(nameLabel);
-        playerHeader.appendChild(drinkCounter);
-        
-        const playerCards = document.createElement('div');
-        playerCards.className = 'player-cards';
-        playerCards.id = `cards-${playerId}`;
-        
-        const playerActions = document.createElement('div');
-        playerActions.className = 'player-actions';
-        playerActions.id = `actions-${playerId}`;
-        playerActions.style.display = 'none';
-        
-        player.appendChild(playerHeader);
-        player.appendChild(playerCards);
-        player.appendChild(playerActions);
-        
-        table.appendChild(player);
+        table.appendChild(playerEl);
       });
     }
 
@@ -822,107 +806,22 @@
       }, duration);
     }
 
-    // Multiplayer game actions
     function autoStart() {
-      if (isHost) {
-        socket.emit('gameAction', {
-          gameCode,
-          action: 'autoStart'
-        });
-      }
+      if (isHost) socket.emit('gameAction', { gameCode, action: 'autoStart' });
     }
 
     function startMemorizePhase() {
-      if (isHost) {
-        socket.emit('gameAction', {
-          gameCode,
-          action: 'startMemorize'
-        });
-      }
+      if (isHost) socket.emit('gameAction', { gameCode, action: 'startMemorize' });
     }
 
     function nextPyramidCard() {
-      if (isHost) {
-        socket.emit('gameAction', {
-          gameCode,
-          action: 'flipPyramidCard'
-        });
-      }
-    }
-
-    function flipPlayerCard(playerId, cardValue) {
-      const playerCards = document.querySelectorAll(`#${playerId} .card`);
-      const playerHandCards = playerHands[playerId] || [];
-      
-      // Find and flip the first matching unflipped card
-      for (let i = 0; i < playerHandCards.length && i < playerCards.length; i++) {
-        if (playerHandCards[i].value === cardValue && !playerCards[i].classList.contains('flipped')) {
-          playerCards[i].classList.add('flipped');
-          break;
-        }
-      }
-    }
-
-    function showCardFlipModal(requiredCardValue) {
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.style.display = 'flex';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <h3>Prove you have ${requiredCardValue}!</h3>
-          <p>Click on the ${requiredCardValue} card in your hand to prove you have it.</p>
-          <p>If you don't have it, you'll drink automatically.</p>
-          <div class="modal-buttons">
-            <button class="cancel-btn" onclick="admitBluff('${requiredCardValue}')">I was bluffing</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      
-      // Make player's cards clickable for proof
-      enableCardFlipProof(requiredCardValue, modal);
-    }
-
-    function enableCardFlipProof(requiredCardValue, modal) {
-      const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
-      const myHandCards = playerHands[myPlayerId] || [];
-      
-      myCards.forEach((cardEl, index) => {
-        const card = myHandCards[index];
-        if (card && card.value === requiredCardValue) {
-          cardEl.style.cursor = 'pointer';
-          cardEl.style.border = '3px solid #f1c40f';
-          
-          cardEl.onclick = (e) => {
-            e.stopPropagation();
-            cardEl.classList.add('flipped');
-            cardEl.style.border = '';
-            cardEl.style.cursor = '';
-            modal.remove();
-            
-            // Send proof to server
-            socket.emit('proveCard', {
-              gameCode,
-              cardValue: requiredCardValue,
-              proved: true
-            });
-          };
-        }
-      });
-      
-      // Auto-admit bluff after 10 seconds if no card clicked
-      setTimeout(() => {
-        if (document.body.contains(modal)) {
-          admitBluff(requiredCardValue);
-        }
-      }, 10000);
+      if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' });
     }
 
     function admitBluff(cardValue) {
       const modal = document.querySelector('.modal');
       if (modal) modal.remove();
       
-      // Clear any card highlighting
       const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
       myCards.forEach(cardEl => {
         cardEl.style.border = '';
@@ -930,29 +829,12 @@
         cardEl.onclick = null;
       });
       
-      socket.emit('proveCard', {
-        gameCode,
-        cardValue: cardValue,
-        proved: false
-      });
-    }
-      gamePhase = 'recall';
-      updateGameStatus('recall');
-      
-      showGameMessage('Time to recite your cards! Each player must recall their 4 cards in order.', 5000);
-      
-      // Show card recall input for current player
-      if (myPlayerId === players[0]) { // Start with first player
-        showCardRecallInput(0);
-      }
+      socket.emit('proveCard', { gameCode, cardValue, proved: false });
     }
 
     function showCardRecallInput(playerIndex) {
       if (playerIndex >= players.length) {
-        // All players done, finish game
-        if (isHost) {
-          socket.emit('gameAction', { gameCode, action: 'finishGame' });
-        }
+        if (isHost) socket.emit('gameAction', { gameCode, action: 'finishGame' });
         return;
       }
       
@@ -960,42 +842,28 @@
       const currentPlayerName = playerNames[playerIndex];
       
       if (currentPlayerId === myPlayerId) {
-        // My turn to recall
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.style.display = 'flex';
         modal.innerHTML = `
           <div class="modal-content">
             <h3>${currentPlayerName}, recite your cards!</h3>
-            <p>Enter your 4 card values in order (e.g., "A 5 K 2"):</p>
-            <p><small>No suits needed - just the values!</small></p>
-            <input type="text" id="card-recall-input" placeholder="Enter card values..." style="width: 300px; margin: 10px 0;">
+            <p>Enter your 4 card values, separated by spaces (e.g., "A 5 K 2"):</p>
+            <input type="text" id="card-recall-input" style="width: 300px; margin: 10px 0;">
             <div class="modal-buttons">
-              <button class="challenge-btn" onclick="submitCardRecall(${playerIndex})">Submit Cards (One chance only!)</button>
+              <button class="challenge-btn" onclick="submitCardRecall(${playerIndex})">Submit Cards</button>
             </div>
           </div>
         `;
         document.body.appendChild(modal);
         document.getElementById('card-recall-input').focus();
-        
-        // Prevent Enter key from submitting multiple times
-        document.getElementById('card-recall-input').addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
-            submitCardRecall(playerIndex);
-          }
-        });
       } else {
-        // Show waiting message
-        showGameMessage(`${currentPlayerName} is reciting their cards...`, 15000);
+        showGameMessage(`${currentPlayerName} is reciting their cards...`);
       }
     }
 
     function submitCardRecall(playerIndex) {
       const input = document.getElementById('card-recall-input');
-      const submitBtn = document.querySelector('.challenge-btn');
-      
-      if (!input || !submitBtn) return; // Already submitted
-      
       const recalledCards = input.value.trim();
       
       if (!recalledCards) {
@@ -1003,42 +871,18 @@
         return;
       }
       
-      // Disable input and button to prevent multiple submissions
-      input.disabled = true;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting...';
+      socket.emit('verifyCardRecall', { gameCode, playerId: myPlayerId, playerIndex, recalledCards });
       
-      // Send recalled cards to server for verification
-      socket.emit('verifyCardRecall', {
-        gameCode,
-        playerId: myPlayerId,
-        playerIndex,
-        recalledCards
-      });
-      
-      // Remove modal after short delay
-      setTimeout(() => {
-        const modal = document.querySelector('.modal');
-        if (modal) modal.remove();
-      }, 1000);
+      const modal = input.closest('.modal');
+      if (modal) modal.remove();
     }
 
-    // Add socket listener for card recall results
     function handleCardRecallResult(data) {
-      if (data.correct) {
-        showGameMessage(`${data.playerName} got their cards right!`, 3000);
-      } else {
-        showGameMessage(`${data.playerName} got it wrong! Finish your drink! 🍺`, 5000);
-        // Add penalty drinks
-        if (data.playerId === myPlayerId) {
-          updateDrinkCount(myPlayerId, 5); // Finish drink = 5 drinks
-        }
-      }
+      showGameMessage(data.correct ? `${data.playerName} got their cards right!` : `${data.playerName} was wrong! Penalty drink! 🍺`);
       
-      // Continue to next player after a delay
       setTimeout(() => {
         showCardRecallInput(data.nextPlayerIndex);
-      }, 2000);
+      }, 3000);
     }
 
     function makeSomeoneDrink() {
@@ -1046,53 +890,37 @@
         showGameMessage("Wait for a pyramid card to be flipped first!");
         return;
       }
-      
       showTargetModal();
     }
 
     function showTargetModal() {
       const targets = players.filter(p => p !== myPlayerId);
       const modal = document.getElementById('target-modal');
-      const messageEl = document.getElementById('target-message');
       const buttonsContainer = document.getElementById('target-buttons');
       
-      const myName = playerNames[players.indexOf(myPlayerId)];
-      messageEl.textContent = `${myName}, choose who to make drink:`;
+      document.getElementById('target-message').textContent = `${playerNames[players.indexOf(myPlayerId)]}, choose who to make drink:`;
       buttonsContainer.innerHTML = '';
       
       targets.forEach(targetId => {
-        const targetIndex = players.indexOf(targetId);
-        const targetName = playerNames[targetIndex];
-        
         const button = document.createElement('button');
         button.className = 'target-player-btn';
-        button.textContent = targetName;
-        button.onclick = () => {
-          selectTarget(targetId);
-        };
-        
+        button.textContent = playerNames[players.indexOf(targetId)];
+        button.onclick = () => selectTarget(targetId);
         buttonsContainer.appendChild(button);
       });
       
       const cancelButton = document.createElement('button');
       cancelButton.className = 'cancel-btn';
       cancelButton.textContent = 'Cancel';
-      cancelButton.onclick = () => {
-        modal.style.display = 'none';
-      };
-      
+      cancelButton.onclick = () => modal.style.display = 'none';
       buttonsContainer.appendChild(cancelButton);
+      
       modal.style.display = 'flex';
     }
 
     function selectTarget(targetId) {
       document.getElementById('target-modal').style.display = 'none';
-      
-      socket.emit('challenge', {
-        gameCode,
-        challengerId: myPlayerId,
-        targetId: targetId
-      });
+      socket.emit('challenge', { gameCode, challengerId: myPlayerId, targetId });
     }
 
     function receiveChallenge(data) {
@@ -1100,277 +928,170 @@
         currentChallenger = data.challengerId;
         currentTarget = data.targetId;
         
-        const challengerIndex = players.indexOf(data.challengerId);
-        const challengerName = playerNames[challengerIndex];
-        
-        document.getElementById('bluff-message').textContent = 
-          `${challengerName} wants you to drink!`;
+        document.getElementById('bluff-message').textContent = `${playerNames[players.indexOf(data.challengerId)]} wants you to drink!`;
         document.getElementById('bluff-modal').style.display = 'flex';
       } else {
-        // Show notification to challenger about their challenge
-        const targetIndex = players.indexOf(data.targetId);
-        const targetName = playerNames[targetIndex];
-        showGameMessage(`Challenge sent to ${targetName}! Waiting for response...`, 3000);
+        showGameMessage(`Challenge sent to ${playerNames[players.indexOf(data.targetId)]}! Waiting...`);
       }
     }
 
     function acceptDrink() {
       document.getElementById('bluff-modal').style.display = 'none';
-      
-      socket.emit('challengeResponse', {
-        gameCode,
-        challengerId: currentChallenger,
-        targetId: currentTarget,
-        response: 'accept'
-      });
-      
-      currentChallenger = null;
-      currentTarget = null;
+      socket.emit('challengeResponse', { gameCode, challengerId: currentChallenger, targetId: currentTarget, response: 'accept' });
     }
 
     function callBluff() {
       document.getElementById('bluff-modal').style.display = 'none';
-      
-      socket.emit('challengeResponse', {
-        gameCode,
-        challengerId: currentChallenger,
-        targetId: currentTarget,
-        response: 'challenge'
-      });
-      
-      currentChallenger = null;
-      currentTarget = null;
+      socket.emit('challengeResponse', { gameCode, challengerId: currentChallenger, targetId: currentTarget, response: 'challenge' });
     }
 
     function updateGameFromState() {
-      // Update game phase and UI
       gamePhase = gameState.phase;
       currentPyramidCard = gameState.currentPyramidCard;
       
-      // Update player hands from server state
       if (gameState.playerHands) {
-        Object.entries(gameState.playerHands).forEach(([playerId, cards]) => {
-          playerHands[playerId] = cards;
-          updatePlayerCardsDisplay(playerId, cards);
+        Object.entries(gameState.playerHands).forEach(([pId, cards]) => {
+          playerHands[pId] = cards;
+          updatePlayerCardsDisplay(pId, cards);
         });
       }
       
-      // Update drink counts
-      Object.entries(gameState.drinkCounts || {}).forEach(([playerId, count]) => {
-        drinkCounts[playerId] = count;
-        const counter = document.getElementById(`drinks-${playerId}`);
-        if (counter) {
-          counter.textContent = `Drinks: ${count}`;
-        }
+      Object.entries(gameState.drinkCounts || {}).forEach(([pId, count]) => {
+        drinkCounts[pId] = count;
+        const counter = document.getElementById(`drinks-${pId}`);
+        if (counter) counter.textContent = `Drinks: ${count}`;
       });
       
-      // Update UI based on phase
       updateGameStatus(gamePhase);
       
-      // Update pyramid cards if they exist
       if (gameState.pyramidCards) {
         updatePyramidFromState(gameState.pyramidCards);
       }
       
-      // Update current card display
       if (currentPyramidCard) {
         document.getElementById('current-card').textContent = currentPyramidCard;
       }
       
-      // Show player actions for current player during pyramid phase
       showPlayerActions(gamePhase === 'pyramid');
     }
 
-    function updatePlayerCardsDisplay(playerId, cards) {
-      const playerCards = document.getElementById(`cards-${playerId}`);
-      if (!playerCards) return;
+    function updatePlayerCardsDisplay(pId, cards) {
+      const playerCardsDiv = document.getElementById(`cards-${pId}`);
+      if (!playerCardsDiv) return;
       
-      playerCards.innerHTML = '';
+      playerCardsDiv.innerHTML = '';
       cards.forEach(card => {
-        const cardEl = createPlayerCard(card, playerId);
-        playerCards.appendChild(cardEl);
+        const cardEl = createPlayerCard(card, pId);
+        playerCardsDiv.appendChild(cardEl);
       });
     }
 
-    function createPlayerCard(card, playerId) {
-      const cardContainer = document.createElement('div');
-      cardContainer.className = 'card';
-
-      const inner = document.createElement('div');
-      inner.className = 'card-inner';
-
-      const front = document.createElement('div');
-      front.className = 'card-front';
-      front.textContent = `${card.value}${card.suit}`;
-      if (card.suit === '♥' || card.suit === '♦') front.style.color = 'red';
-
-      const back = document.createElement('div');
-      back.className = 'card-back';
-      back.textContent = '🂠';
-
-      inner.appendChild(front);
-      inner.appendChild(back);
-      cardContainer.appendChild(inner);
-
-      cardContainer.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (gamePhase === 'memorize' && playerId === myPlayerId) {
-          cardContainer.classList.toggle('flipped');
+    function createPlayerCard(card, pId) {
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card';
+      cardEl.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">${card.value}${card.suit}</div>
+          <div class="card-back">🂠</div>
+        </div>
+      `;
+      if (card.suit === '♥' || card.suit === '♦') {
+        cardEl.querySelector('.card-front').style.color = 'red';
+      }
+      cardEl.addEventListener('click', (e) => {
+        if (gamePhase === 'memorize' && pId === myPlayerId) {
+          e.currentTarget.classList.toggle('flipped');
         }
       });
-
-      return cardContainer;
+      return cardEl;
     }
 
     function updatePyramidFromState(pyramidCards) {
-      const pyramid = document.getElementById('pyramid');
-      if (pyramidCards.length === 0) return;
-      
-      pyramid.innerHTML = '';
+      const pyramidEl = document.getElementById('pyramid');
+      pyramidEl.innerHTML = '';
       let cardIndex = 0;
-      
-      // Rebuild pyramid structure based on player count
-      const rows = players.length < 8 ? 6 : Math.max(1, 8 - players.length);
-      
-      for (let row = 1; row <= rows && cardIndex < pyramidCards.length; row++) {
+      const rows = Math.floor((-1 + Math.sqrt(1 + 8 * pyramidCards.length)) / 2);
+
+      for (let row = 1; row <= rows; row++) {
         const rowEl = document.createElement('div');
         rowEl.className = 'row';
-        
-        for (let i = 0; i < row && cardIndex < pyramidCards.length; i++) {
+        for (let i = 0; i < row; i++) {
           const cardData = pyramidCards[cardIndex];
-          const card = createPyramidCard(cardData, cardIndex);
-          
-          // Flip card if it's been revealed
-          if (cardData.revealed) {
-            card.classList.add('flipped');
-          }
-          
-          rowEl.appendChild(card);
+          const cardEl = createPyramidCard(cardData, cardIndex);
+          if (cardData.revealed) cardEl.classList.add('flipped');
+          rowEl.appendChild(cardEl);
           cardIndex++;
         }
-        pyramid.appendChild(rowEl);
+        pyramidEl.appendChild(rowEl);
       }
     }
 
     function createPyramidCard(cardData, index) {
-      const cardContainer = document.createElement('div');
-      cardContainer.className = 'card';
-      cardContainer.dataset.index = index;
-
-      const inner = document.createElement('div');
-      inner.className = 'card-inner';
-
-      const front = document.createElement('div');
-      front.className = 'card-front';
-      front.textContent = `${cardData.value}${cardData.suit}`;
-      if (cardData.suit === '♥' || cardData.suit === '♦') front.style.color = 'red';
-
-      const back = document.createElement('div');
-      back.className = 'card-back';
-      back.textContent = '🂠';
-
-      inner.appendChild(front);
-      inner.appendChild(back);
-      cardContainer.appendChild(inner);
-
-      return cardContainer;
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card';
+      cardEl.dataset.index = index;
+      cardEl.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">${cardData.value}${cardData.suit}</div>
+          <div class="card-back">🂠</div>
+        </div>
+      `;
+      if (cardData.suit === '♥' || cardData.suit === '♦') {
+        cardEl.querySelector('.card-front').style.color = 'red';
+      }
+      return cardEl;
     }
 
     function updateGameStatus(phase) {
-      gamePhase = phase;
       const phaseDisplay = document.getElementById('phase-display');
       const timerDisplay = document.getElementById('timer-display');
       const cardDisplay = document.getElementById('current-card-display');
       const currentTurn = document.getElementById('current-turn');
       
-      // Hide all buttons first
-      document.getElementById('auto-start-btn').style.display = 'none';
-      document.getElementById('memorize-btn').style.display = 'none';
-      document.getElementById('pyramid-btn').style.display = 'none';
+      const buttons = ['auto-start-btn', 'memorize-btn', 'pyramid-btn'];
+      buttons.forEach(btn => document.getElementById(btn).style.display = 'none');
       
-      // Remove any existing restart button
       const existingRestartBtn = document.getElementById('restart-btn');
-      if (existingRestartBtn) {
-        existingRestartBtn.remove();
-      }
+      if (existingRestartBtn) existingRestartBtn.remove();
       
       switch(phase) {
         case 'setup':
-          phaseDisplay.textContent = 'Phase: Ready to deal cards';
-          timerDisplay.style.display = 'none';
-          cardDisplay.style.display = 'none';
+          phaseDisplay.textContent = 'Phase: Ready to deal';
           currentTurn.textContent = 'Ready to Start!';
-          
-          // Show auto-start button only for host
-          if (isHost) {
-            document.getElementById('auto-start-btn').style.display = 'block';
-          }
+          if (isHost) document.getElementById('auto-start-btn').style.display = 'block';
           break;
-          
         case 'dealt':
-          phaseDisplay.textContent = 'Phase: Cards dealt - Ready to memorize';
-          timerDisplay.style.display = 'none';
-          cardDisplay.style.display = 'none';
-          currentTurn.textContent = 'Cards Ready!';
-          
-          // Show memorize button only for host
-          if (isHost) {
-            document.getElementById('memorize-btn').style.display = 'block';
-          }
+          phaseDisplay.textContent = 'Phase: Ready to memorize';
+          currentTurn.textContent = 'Cards Dealt!';
+          if (isHost) document.getElementById('memorize-btn').style.display = 'block';
           break;
-          
         case 'memorize':
-          phaseDisplay.textContent = 'Phase: MEMORIZE YOUR CARDS!';
+          phaseDisplay.textContent = 'Phase: MEMORIZE!';
           timerDisplay.style.display = 'block';
-          cardDisplay.style.display = 'none';
-          currentTurn.textContent = 'Everyone Memorize!';
-          
-          // Start local memorize timer and flip own cards
+          currentTurn.textContent = 'Memorize Your Cards!';
           startLocalMemorizePhase();
           break;
-          
         case 'pyramid':
-          phaseDisplay.textContent = 'Phase: Pyramid Game';
+          phaseDisplay.textContent = 'Phase: Pyramid';
           timerDisplay.style.display = 'none';
           cardDisplay.style.display = 'block';
-          currentTurn.textContent = 'Playing the Pyramid';
-          
-          // Show pyramid controls only for host
-          if (isHost) {
-            document.getElementById('pyramid-btn').style.display = 'block';
-          }
+          currentTurn.textContent = 'Pyramid Phase';
+          if (isHost) document.getElementById('pyramid-btn').style.display = 'block';
           break;
-          
         case 'recall':
-          phaseDisplay.textContent = 'Phase: Card Recall - Recite Your Cards!';
-          timerDisplay.style.display = 'none';
-          cardDisplay.style.display = 'none';
-          currentTurn.textContent = 'Recall Phase';
+          phaseDisplay.textContent = 'Phase: Recall';
+          currentTurn.textContent = 'Recall Your Cards!';
+          if (myPlayerId === players[0]) showCardRecallInput(0);
           break;
-          
         case 'finished':
-          phaseDisplay.textContent = 'Phase: Game Complete!';
-          timerDisplay.style.display = 'none';
-          cardDisplay.style.display = 'none';
+          phaseDisplay.textContent = 'Phase: Game Over';
           currentTurn.textContent = 'Game Finished!';
-          
-          // Show restart button only for host (and only once)
-          if (isHost && !document.getElementById('restart-btn')) {
+          if (isHost) {
             const restartBtn = document.createElement('button');
             restartBtn.id = 'restart-btn';
             restartBtn.textContent = 'Restart Game';
-            restartBtn.style.backgroundColor = '#27ae60';
-            restartBtn.style.color = 'white';
-            restartBtn.style.padding = '8px 12px';
-            restartBtn.style.fontSize = '0.8rem';
-            restartBtn.style.margin = '2px';
-            restartBtn.onclick = () => {
-              restartGame();
-              restartBtn.remove(); // Remove button after clicking
-            };
-            
-            const phaseActions = document.querySelector('.phase-actions');
-            phaseActions.appendChild(restartBtn);
+            restartBtn.onclick = () => { restartGame(); restartBtn.remove(); };
+            document.querySelector('.phase-actions').appendChild(restartBtn);
           }
           break;
       }
@@ -1378,28 +1099,12 @@
 
     function startLocalMemorizePhase() {
       timeLeft = 30;
-      
-      // Ensure all my cards are flipped face up
-      setTimeout(() => {
-        const myPlayerCards = document.querySelectorAll(`#${myPlayerId} .card`);
-        myPlayerCards.forEach((card, index) => {
-          // Double-check each card is flipped
-          if (!card.classList.contains('flipped')) {
-            card.classList.add('flipped');
-          }
-          
-          // Force a re-render to ensure flip animation works
-          card.style.transform = 'scale(1.01)';
-          setTimeout(() => {
-            card.style.transform = 'scale(1)';
-          }, 100);
-        });
-      }, 200); // Small delay to ensure DOM is ready
+      const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
+      myCards.forEach(card => card.classList.add('flipped'));
       
       memorizeTimer = setInterval(() => {
         timeLeft--;
         document.getElementById('countdown').textContent = timeLeft;
-        
         if (timeLeft <= 0) {
           clearInterval(memorizeTimer);
           endLocalMemorizePhase();
@@ -1408,53 +1113,27 @@
     }
 
     function endLocalMemorizePhase() {
-      // Flip only the current user's cards back to face down
-      const myPlayerCards = document.querySelectorAll(`#${myPlayerId} .card`);
-      myPlayerCards.forEach(card => {
-        card.classList.remove('flipped');
-      });
+      const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
+      myCards.forEach(card => card.classList.remove('flipped'));
     }
 
     function showPlayerActions(show) {
-      players.forEach(playerId => {
-        const actions = document.getElementById(`actions-${playerId}`);
-        if (actions) {
-          if (show && playerId === myPlayerId) {
-            createPlayerActions(playerId);
-            actions.style.display = 'flex';
-          } else {
-            actions.style.display = 'none';
-          }
+      const actions = document.getElementById(`actions-${myPlayerId}`);
+      if (actions) {
+        if (show) {
+          actions.innerHTML = `<button class="action-btn target-btn" onclick="makeSomeoneDrink()">Make Drink</button>`;
+          actions.style.display = 'flex';
+        } else {
+          actions.style.display = 'none';
         }
-      });
-    }
-
-    function createPlayerActions(playerId) {
-      const actionsDiv = document.getElementById(`actions-${playerId}`);
-      if (!actionsDiv) return;
-      
-      actionsDiv.innerHTML = '';
-      
-      const makePlayerDrinkBtn = document.createElement('button');
-      makePlayerDrinkBtn.className = 'action-btn target-btn';
-      makePlayerDrinkBtn.textContent = 'Make Someone Drink';
-      makePlayerDrinkBtn.onclick = () => makeSomeoneDrink();
-      
-      actionsDiv.appendChild(makePlayerDrinkBtn);
-    }
-
-    function startRecallPhase() {
-      if (isHost) {
-        socket.emit('gameAction', {
-          gameCode,
-          action: 'startRecall'
-        });
       }
     }
 
+    function startRecallPhase() {
+        if (isHost) socket.emit('gameAction', { gameCode, action: 'startRecall' });
+    }
+
     // Initialize when page loads
-    // ***** THE FIX IS HERE *****
-    // This line is now uncommented, so the game will connect to the server on page load.
     window.addEventListener('load', () => {
       initSocket();
     });
