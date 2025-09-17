@@ -160,11 +160,7 @@ io.on('connection', (socket) => {
       playerSockets.set(socket.id, socket);
       socket.join(data.gameCode);
       
-      // Notify the joining player that they succeeded
       socket.emit('gameJoined', { gameCode: data.gameCode, playerId: socket.id, players: game.players });
-      
-      // *** THE FIX IS HERE ***
-      // Notify EVERYONE in the room (including the new player) with the complete list of players.
       broadcastToGame(data.gameCode, 'playerJoined', { players: game.players });
       
       console.log(`${data.playerName} joined game ${data.gameCode}`);
@@ -338,8 +334,10 @@ io.on('connection', (socket) => {
       if (game.players[socket.id]) {
         if (game.host === socket.id && game.playerOrder.length > 1) {
           const nextHostId = game.playerOrder.find(id => id !== socket.id);
-          game.host = nextHostId;
-          if(game.players[nextHostId]) game.players[nextHostId].isHost = true;
+          if (nextHostId) {
+            game.host = nextHostId;
+            if(game.players[nextHostId]) game.players[nextHostId].isHost = true;
+          }
         }
         delete game.players[socket.id];
         game.playerOrder = game.playerOrder.filter(id => id !== socket.id);
@@ -350,7 +348,7 @@ io.on('connection', (socket) => {
           broadcastToGame(gameCode, 'playerLeft', { players: game.players });
         }
         break;
-      }
+      } // <-- *** THE FIX IS HERE: This brace closes the 'if' statement ***
     }
     playerSockets.delete(socket.id);
   });
@@ -359,4 +357,4 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Pyramid Card Game server running on port ${PORT}`);
-});```
+});
