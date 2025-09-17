@@ -147,6 +147,17 @@ function getGameState(game) {
   };
 }
 
+function parseRecalledCards(recalledString) {
+  // Parse string like "A♠ 5♥ K♦ 2♣" into array
+  const cardPattern = /([AJQK2-9]|10)[♠♥♦♣]/g;
+  return recalledString.match(cardPattern) || [];
+}
+
+function arraysEqual(a, b) {
+  if (a.length !== b.length) return false;
+  return a.every((val, index) => val === b[index]);
+}
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`);
@@ -287,9 +298,18 @@ io.on('connection', (socket) => {
             
             // Check if all pyramid cards are flipped
             if (game.flipIndex >= game.pyramidCards.length) {
-              game.phase = 'finished';
+              game.phase = 'recall';
+              // Start card recall phase
+              setTimeout(() => {
+                broadcastToGame(data.gameCode, 'startCardRecall', {});
+              }, 1000);
             }
           }
+          break;
+
+        case 'finishGame':
+          game.phase = 'finished';
+          game.currentRecallPlayer = 0;
           break;
           
         case 'restartGame':
@@ -301,6 +321,7 @@ io.on('connection', (socket) => {
           game.pyramidCards = [];
           game.currentPyramidCard = null;
           game.flipIndex = 0;
+          game.currentRecallPlayer = 0;
           
           // Reset drink counts
           game.playerOrder.forEach(playerId => {
@@ -345,13 +366,17 @@ io.on('connection', (socket) => {
       
       const challengerId = data.challengerId;
       const targetId = data.targetId;
+      const challengerName = game.players[challengerId]?.name || 'Unknown';
+      const targetName = game.players[targetId]?.name || 'Unknown';
       
       if (data.response === 'accept') {
         // Target accepts drink
         game.drinkCounts[targetId] = (game.drinkCounts[targetId] || 0) + 1;
         
-        broadcastToGame(data.gameCode, 'gameStateUpdate', {
-          gameState: getGameState(game)
+        // Broadcast result message
+        broadcastToGame(data.gameCode, 'challengeResult', {
+          message: `${targetName} takes a drink! 🍺`,
+          flipCard: false
         });
         
       } else if (data.response === 'challenge') {
@@ -363,22 +388,72 @@ io.on('connection', (socket) => {
         if (hasCard) {
           // Challenger was telling truth - target drinks twice
           game.drinkCounts[targetId] = (game.drinkCounts[targetId] || 0) + 2;
+          
+          broadcastToGame(data.gameCode, 'challengeResult', {
+            message: `${challengerName} proves they have ${cardValue}! ${targetName} drinks twice! 🍺🍺`,
+            flipCard: true,
+            challengerId: challengerId,
+            cardValue: cardValue
+          });
         } else {
           // Challenger was bluffing - they drink instead
           game.drinkCounts[challengerId] = (game.drinkCounts[challengerId] || 0) + 1;
+          
+          broadcastToGame(data.gameCode, 'challengeResult', {
+            message: `${challengerName} was bluffing! They drink instead! 🍺`,
+            flipCard: false
+          });
         }
-        
-        broadcastToGame(data.gameCode, 'gameStateUpdate', {
-          gameState: getGameState(game)
-        });
       }
+      
+      // Update game state
+      broadcastToGame(data.gameCode, 'gameStateUpdate', {
+        gameState: getGameState(game)
+      });
       
     } catch (error) {
       socket.emit('error', { message: 'Failed to process challenge response' });
     }
   });
 
-  socket.on('disconnect', () => {
+  socket.on('verifyCardRecall', (data) => {
+    try {
+      const game = games.get(data.gameCode);
+      if (!game) return;
+      
+      const playerId = data.playerId;
+      const playerName = game.players[playerId]?.name || 'Unknown';
+      const actualCards = game.playerHands[playerId] || [];
+      const recalledCards = data.recalledCards;
+      
+      // Parse recalled cards and compare with actual cards
+      const actualCardStrings = actualCards.map(card => `${card.value}${card.suit}`);
+      const recalledCardArray = parseRecalledCards(recalledCards);
+      
+      const correct = arraysEqual(actualCardStrings.sort(), recalledCardArray.sort());
+      
+      if (!correct) {
+        // Player got it wrong - add penalty drinks
+        game.drinkCounts[playerId] = (game.drinkCounts[playerId] || 0) + 5;
+      }
+      
+      // Broadcast result
+      broadcastToGame(data.gameCode, 'cardRecallResult', {
+        playerId: playerId,
+        playerName: playerName,
+        correct: correct,
+        nextPlayerIndex: data.playerIndex + 1
+      });
+      
+      // Update game state
+      broadcastToGame(data.gameCode, 'gameStateUpdate', {
+        gameState: getGameState(game)
+      });
+      
+    } catch (error) {
+      socket.emit('error', { message: 'Failed to verify card recall' });
+    }
+  });
     console.log(`Player disconnected: ${socket.id}`);
     
     // Find and update games
