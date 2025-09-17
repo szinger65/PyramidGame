@@ -15,14 +15,14 @@ const io = socketIo(server, {
 });
 
 // *** THE FIX IS HERE ***
-// 1. We tell Express to serve static files from the project's root directory.
-// This is important for CSS, images, or other files you might add later.
-app.use(express.static(path.join(__dirname)));
+// We now tell Express that the static files (like index.html) are one directory UP
+// from the current directory (__dirname, which is /src).
+app.use(express.static(path.join(__dirname, '..')));
 
-// 2. We explicitly tell Express what to do when someone visits the main URL ("/").
-// It will send them the index.html file. This is the line that was missing.
+// We also correct the path for serving the main file.
+// '..' tells it to look in the parent directory (/project) instead of the current one (/src).
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() }));
