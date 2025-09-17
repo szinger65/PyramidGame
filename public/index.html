@@ -544,8 +544,8 @@
     // Initialize socket connection
     function initSocket() {
       // Auto-detect environment and connect appropriately
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const socketUrl = isLocal ? 'ws://localhost:3000' : undefined; // undefined means same origin
+      // For Render deployment, the server will be at the same origin, so 'undefined' is correct.
+      const socketUrl = undefined;
       
       socket = io(socketUrl);
       
@@ -610,6 +610,9 @@
 
       socket.on('error', (error) => {
         showGameMessage(error.message);
+        // Re-enable buttons on error
+        document.getElementById('host-btn').disabled = false;
+        document.getElementById('join-btn').disabled = false;
       });
 
     function restartGame() {
@@ -642,8 +645,10 @@
     function hostGame() {
       const hostName = document.getElementById('host-name').value.trim() || 'Host Player';
       
-      if (!socket) {
-        initSocket();
+      if (!socket || !socket.connected) {
+        showGameMessage('Connecting to server... Please try again in a moment.');
+        if (!socket) initSocket(); // Attempt to connect if not already
+        return;
       }
       
       socket.emit('hostGame', { playerName: hostName });
@@ -659,8 +664,10 @@
         return;
       }
 
-      if (!socket) {
-        initSocket();
+      if (!socket || !socket.connected) {
+        showGameMessage('Connecting to server... Please try again in a moment.');
+        if (!socket) initSocket(); // Attempt to connect if not already
+        return;
       }
       
       socket.emit('joinGame', { gameCode: code, playerName: playerName });
@@ -943,7 +950,9 @@
     function showCardRecallInput(playerIndex) {
       if (playerIndex >= players.length) {
         // All players done, finish game
-        socket.emit('gameAction', { gameCode, action: 'finishGame' });
+        if (isHost) {
+          socket.emit('gameAction', { gameCode, action: 'finishGame' });
+        }
         return;
       }
       
@@ -1444,9 +1453,10 @@
     }
 
     // Initialize when page loads
+    // ***** THE FIX IS HERE *****
+    // This line is now uncommented, so the game will connect to the server on page load.
     window.addEventListener('load', () => {
-      // Auto-connect socket for testing
-      // initSocket();
+      initSocket();
     });
 
   </script>
