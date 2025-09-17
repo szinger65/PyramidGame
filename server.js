@@ -14,16 +14,19 @@ const io = socketIo(server, {
   }
 });
 
-// *** THE FIX IS HERE ***
-// We now tell Express that the static files (like index.html) are one directory UP
-// from the current directory (__dirname, which is /src).
-app.use(express.static(path.join(__dirname, '..')));
+// *** THE FINAL FIX IS HERE ***
+// process.cwd() is the directory where you run the 'node' command from.
+// On Render, this is your project's root directory. This is the most reliable way.
+const ROOT_DIR = process.cwd();
 
-// We also correct the path for serving the main file.
-// '..' tells it to look in the parent directory (/project) instead of the current one (/src).
+// Serve static files (like index.html) from the project's root directory.
+app.use(express.static(ROOT_DIR));
+
+// Explicitly serve the index.html file for the main URL.
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'index.html'));
+    res.sendFile(path.join(ROOT_DIR, 'index.html'));
 });
+
 
 app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() }));
 
