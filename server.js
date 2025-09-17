@@ -270,7 +270,6 @@ io.on('connection', (socket) => {
       
       switch (data.action) {
         case 'autoStart':
-          // Deal cards and build pyramid
           dealCards(game);
           buildPyramid(game);
           game.phase = 'dealt';
@@ -278,7 +277,6 @@ io.on('connection', (socket) => {
           
         case 'startMemorize':
           game.phase = 'memorize';
-          // Start 30 second timer (handled client-side)
           setTimeout(() => {
             if (game.phase === 'memorize') {
               game.phase = 'pyramid';
@@ -296,10 +294,8 @@ io.on('connection', (socket) => {
             game.currentPyramidCard = `${card.value}${card.suit}`;
             game.flipIndex++;
             
-            // Check if all pyramid cards are flipped
             if (game.flipIndex >= game.pyramidCards.length) {
               game.phase = 'recall';
-              // Start card recall phase
               setTimeout(() => {
                 broadcastToGame(data.gameCode, 'startCardRecall', {});
               }, 1000);
@@ -313,7 +309,6 @@ io.on('connection', (socket) => {
           break;
           
         case 'restartGame':
-          // Reset game state
           game.phase = 'setup';
           game.deck = createDeck();
           game.playerHands = {};
@@ -323,14 +318,12 @@ io.on('connection', (socket) => {
           game.flipIndex = 0;
           game.currentRecallPlayer = 0;
           
-          // Reset drink counts
           game.playerOrder.forEach(playerId => {
             game.drinkCounts[playerId] = 0;
           });
           break;
       }
       
-      // Broadcast updated state
       broadcastToGame(data.gameCode, 'gameStateUpdate', {
         gameState: getGameState(game)
       });
@@ -345,7 +338,6 @@ io.on('connection', (socket) => {
       const game = games.get(data.gameCode);
       if (!game) return;
       
-      // Broadcast challenge to target player
       const targetSocket = playerSockets.get(data.targetId);
       if (targetSocket) {
         targetSocket.emit('challengeReceived', {
@@ -370,23 +362,19 @@ io.on('connection', (socket) => {
       const targetName = game.players[targetId]?.name || 'Unknown';
       
       if (data.response === 'accept') {
-        // Target accepts drink
         game.drinkCounts[targetId] = (game.drinkCounts[targetId] || 0) + 1;
         
-        // Broadcast result message
         broadcastToGame(data.gameCode, 'challengeResult', {
           message: `${targetName} takes a drink! 🍺`,
           flipCard: false
         });
         
       } else if (data.response === 'challenge') {
-        // Target calls bluff - check if challenger has the card
         const cardValue = game.currentPyramidCard.replace(/[♠♥♦♣]/g, '');
         const challengerCards = game.playerHands[challengerId] || [];
         const hasCard = challengerCards.some(card => card.value === cardValue);
         
         if (hasCard) {
-          // Challenger was telling truth - target drinks twice
           game.drinkCounts[targetId] = (game.drinkCounts[targetId] || 0) + 2;
           
           broadcastToGame(data.gameCode, 'challengeResult', {
@@ -396,7 +384,6 @@ io.on('connection', (socket) => {
             cardValue: cardValue
           });
         } else {
-          // Challenger was bluffing - they drink instead
           game.drinkCounts[challengerId] = (game.drinkCounts[challengerId] || 0) + 1;
           
           broadcastToGame(data.gameCode, 'challengeResult', {
@@ -406,7 +393,6 @@ io.on('connection', (socket) => {
         }
       }
       
-      // Update game state
       broadcastToGame(data.gameCode, 'gameStateUpdate', {
         gameState: getGameState(game)
       });
@@ -426,18 +412,15 @@ io.on('connection', (socket) => {
       const actualCards = game.playerHands[playerId] || [];
       const recalledCards = data.recalledCards;
       
-      // Parse recalled cards and compare with actual cards
       const actualCardStrings = actualCards.map(card => `${card.value}${card.suit}`);
       const recalledCardArray = parseRecalledCards(recalledCards);
       
       const correct = arraysEqual(actualCardStrings.sort(), recalledCardArray.sort());
       
       if (!correct) {
-        // Player got it wrong - add penalty drinks
         game.drinkCounts[playerId] = (game.drinkCounts[playerId] || 0) + 5;
       }
       
-      // Broadcast result
       broadcastToGame(data.gameCode, 'cardRecallResult', {
         playerId: playerId,
         playerName: playerName,
@@ -445,7 +428,6 @@ io.on('connection', (socket) => {
         nextPlayerIndex: data.playerIndex + 1
       });
       
-      // Update game state
       broadcastToGame(data.gameCode, 'gameStateUpdate', {
         gameState: getGameState(game)
       });
@@ -454,33 +436,30 @@ io.on('connection', (socket) => {
       socket.emit('error', { message: 'Failed to verify card recall' });
     }
   });
+
+  // ✅ Fixed: wrap disconnect logic properly
+  socket.on('disconnect', () => {
     console.log(`Player disconnected: ${socket.id}`);
     
-    // Find and update games
     for (let [gameCode, game] of games.entries()) {
       if (game.players[socket.id]) {
         if (game.host === socket.id) {
-          // Host disconnected - end game or transfer host
           if (game.playerOrder.length > 1) {
-            // Transfer host to next player
             const nextHost = game.playerOrder.find(id => id !== socket.id);
             if (nextHost) {
               game.host = nextHost;
               game.players[nextHost].isHost = true;
             }
           } else {
-            // Last player - delete game
             games.delete(gameCode);
             playerSockets.delete(socket.id);
             return;
           }
         }
         
-        // Remove player
         delete game.players[socket.id];
         game.playerOrder = game.playerOrder.filter(id => id !== socket.id);
         
-        // Notify remaining players
         socket.to(gameCode).emit('playerLeft', {
           playerId: socket.id
         });
@@ -500,7 +479,6 @@ server.listen(PORT, () => {
 
 // Cleanup old games periodically
 setInterval(() => {
-  const now = Date.now();
   for (let [gameCode, game] of games.entries()) {
     const connectedPlayers = game.playerOrder.filter(id => 
       playerSockets.has(id) && playerSockets.get(id).connected
@@ -511,4 +489,4 @@ setInterval(() => {
       games.delete(gameCode);
     }
   }
-}, 300000); // Clean up every 5 minutes
+}, 300000);
