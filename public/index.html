@@ -394,69 +394,50 @@
     .connection-status.disconnected {
       border: 2px solid #e74c3c;
     }
-
-    .recall-phase {
-      background: rgba(156, 39, 176, 0.8);
-    }
   </style>
 </head>
 <body>
-  <!-- Menu Screen -->
+  
   <div id="menu-screen" class="screen active">
     <h1>🃏 Pyramid Card Game</h1>
     <h2>Choose Game Mode</h2>
-    
     <button onclick="showHostScreen()">Host New Game</button>
     <button onclick="showJoinScreen()">Join Game</button>
   </div>
 
-  <!-- Host Screen -->
   <div id="host-screen" class="screen">
     <h1>🃏 Host New Game</h1>
-    
     <label for="host-name">Your Name:</label>
     <input type="text" id="host-name" placeholder="Enter your name" value="Host Player">
-    
     <button onclick="hostGame()" id="host-btn">Create Game</button>
     <button onclick="showMenuScreen()">Back</button>
-
     <div id="host-info" style="display:none;">
       <div class="connection-info">
         <h3>Game Created!</h3>
-        <p>Share this code with other players:</p>
-        <div class="game-code" id="host-game-code">LOADING...</div>
-        <p>Players can join at: <strong>your-game-url.com</strong></p>
+        <p>Share this code:</p>
+        <div class="game-code" id="host-game-code">...</div>
       </div>
-
       <div class="players-list">
         <h4>Players in Game:</h4>
         <div id="host-players-list"></div>
       </div>
-
       <button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game (Need 3+ players)</button>
     </div>
   </div>
-
-  <!-- Join Screen -->
+  
   <div id="join-screen" class="screen">
     <h1>🃏 Join Game</h1>
-    
     <label for="join-name">Your Name:</label>
     <input type="text" id="join-name" placeholder="Enter your name" value="Player">
-    
     <label for="game-code-input">Game Code:</label>
     <input type="text" id="game-code-input" placeholder="Enter game code" style="text-transform:uppercase;">
-    
     <button onclick="joinGame()" id="join-btn">Join Game</button>
     <button onclick="showMenuScreen()">Back</button>
-
     <div id="join-info" style="display:none;">
       <div class="connection-info">
         <h3>Joined Game!</h3>
-        <div class="game-code" id="join-game-code">GAME123</div>
-        <p>Waiting for host to start the game...</p>
+        <p>Waiting for host to start...</p>
       </div>
-
       <div class="players-list">
         <h4>Players in Game:</h4>
         <div id="join-players-list"></div>
@@ -464,33 +445,25 @@
     </div>
   </div>
 
-  <!-- Game Screen -->
   <div id="game-screen" class="screen">
     <h1>Pyramid Drinking Game</h1>
-    
     <div id="game-controls">
       <div id="current-turn">Setting Up...</div>
       <div id="phase-display">Phase: Setup</div>
       <div id="timer-display" style="display:none;">Time: <span id="countdown">30</span>s</div>
       <div id="current-card-display" style="display:none;">Current Card: <span id="current-card"></span></div>
       <div class="phase-actions">
-        <button onclick="autoStart()" id="auto-start-btn" style="display:none;">Auto Deal & Start</button>
-        <button onclick="startMemorizePhase()" id="memorize-btn" style="background-color:#e74c3c;color:white;display:none;">Start Memorizing (30s)</button>
-        <button onclick="nextPyramidCard()" id="pyramid-btn" style="background-color:#3498db;color:white;display:none;">Flip Next Card</button>
-        <button onclick="startRecallPhase()" id="recall-btn" style="background-color:#9c27b0;color:white;display:none;">Start Recall Phase</button>
+        <button onclick="autoStart()" id="auto-start-btn" style="display:none;">Deal & Start</button>
+        <button onclick="startMemorizePhase()" id="memorize-btn" style="display:none;">Start Memorizing (30s)</button>
+        <button onclick="nextPyramidCard()" id="pyramid-btn" style="display:none;">Flip Next Card</button>
       </div>
     </div>
-
     <div id="table" class="table">
       <div id="pyramid" class="pyramid"></div>
     </div>
-
-    <div id="connection-status" class="connection-status disconnected">
-      Connecting...
-    </div>
+    <div id="connection-status" class="connection-status disconnected">...</div>
   </div>
 
-  <!-- Target Selection Modal -->
   <div id="target-modal" class="modal">
     <div class="modal-content">
       <h3 id="target-message">Choose who to make drink:</h3>
@@ -498,169 +471,80 @@
     </div>
   </div>
 
-  <!-- Bluff Modal -->
   <div id="bluff-modal" class="modal">
     <div class="modal-content">
       <h3 id="bluff-message">Player X wants you to drink!</h3>
-      <p>You can either drink or call their bluff.</p>
+      <p>You can drink or call their bluff.</p>
       <div class="modal-buttons">
-        <button class="accept-btn" onclick="acceptDrink()">Take the Drink</button>
+        <button class="accept-btn" onclick="acceptDrink()">Take Drink</button>
         <button class="challenge-btn" onclick="callBluff()">Call Bluff!</button>
       </div>
     </div>
   </div>
 
-  <!-- Game Message Display -->
   <div id="game-message" class="game-message"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
   <script>
-    // Game state
-    const suits = ['♠', '♥', '♦', '♣'];
-    const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-    let socket = null;
-    let gameCode = null;
-    let playerId = null;
-    let isHost = false;
-    let gameState = {};
-    let connectedPlayers = {};
-    
-    // Game variables
-    let deck = [];
-    let players = [];
-    let flipIndex = 0;
-    const playerHands = {};
-    const drinkCounts = {};
-    let playerNames = [];
-    let gamePhase = 'setup';
-    let currentPyramidCard = null;
-    let memorizeTimer = null;
-    let timeLeft = 30;
-    let currentChallenger = null;
-    let currentTarget = null;
-    let currentRecallPlayer = 0;
-    let myPlayerId = null;
+    let socket = null, gameCode = null, playerId = null, isHost = false, gameState = {}, connectedPlayers = {};
+    let players = [], playerHands = {}, drinkCounts = {}, playerNames = [], gamePhase = 'setup', myPlayerId = null, currentChallenger = null, currentTarget = null;
 
-    // ***** CORRECTED SECTION STARTS HERE *****
-    // This function now correctly handles both local and deployed environments.
     function initSocket() {
-      // Auto-detect environment and connect appropriately
       const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      // When local, connect to the Node.js server port. When deployed, connect to the same origin.
-      const socketUrl = isLocal ? 'http://localhost:3000' : undefined; 
-      
+      const socketUrl = isLocal ? 'http://localhost:3000' : undefined;
       socket = io(socketUrl);
-      
-      socket.on('connect', () => {
-        updateConnectionStatus(true);
-      });
 
-      socket.on('disconnect', () => {
-        updateConnectionStatus(false);
-      });
-
-      socket.on('gameCreated', (data) => {
-        gameCode = data.gameCode;
-        playerId = data.playerId;
-        isHost = true;
-        document.getElementById('host-game-code').textContent = gameCode;
-        document.getElementById('host-info').style.display = 'block';
-        updatePlayersList();
-      });
-
-      socket.on('gameJoined', (data) => {
-        gameCode = data.gameCode;
-        playerId = data.playerId;
-        isHost = false;
-        document.getElementById('join-game-code').textContent = gameCode;
-        document.getElementById('join-info').style.display = 'block';
-        connectedPlayers = data.players;
-        updatePlayersList();
-      });
-
-      socket.on('playerJoined', (data) => {
-        connectedPlayers[data.playerId] = data.player;
-        updatePlayersList();
-      });
-
-      socket.on('playerLeft', (data) => {
-        delete connectedPlayers[data.playerId];
-        updatePlayersList();
-      });
-
-      socket.on('gameStarted', (data) => {
-        gameState = data.gameState;
-        startMultiplayerGame();
-      });
-
-      socket.on('gameStateUpdate', (data) => {
-        gameState = data.gameState;
-        updateGameFromState();
-      });
-
-      socket.on('challengeReceived', (data) => {
-        receiveChallenge(data);
-      });
-
-      socket.on('startCardRecall', (data) => {
-        startCardRecallPhase();
-      });
-
-      socket.on('cardRecallResult', (data) => {
-        handleCardRecallResult(data);
-      });
-
-      socket.on('error', (error) => {
-        showGameMessage(error.message);
-        // Re-enable buttons on error
+      socket.on('connect', () => updateConnectionStatus(true));
+      socket.on('disconnect', () => updateConnectionStatus(false));
+      socket.on('error', (err) => {
+        showGameMessage(err.message);
         document.getElementById('host-btn').disabled = false;
         document.getElementById('join-btn').disabled = false;
       });
 
-      socket.on('connect_error', (err) => {
-        console.error('Connection failed:', err.message);
-        updateConnectionStatus(false);
-        showGameMessage('Could not connect to the server. Is it running?');
+      socket.on('gameCreated', (data) => {
+        gameCode = data.gameCode; playerId = data.playerId; isHost = true;
+        document.getElementById('host-game-code').textContent = gameCode;
+        document.getElementById('host-info').style.display = 'block';
+        updatePlayersList(data.players);
       });
-    }
-    // ***** CORRECTED SECTION ENDS HERE *****
-    
-    // This function has been removed from inside initSocket() to be globally accessible
-    function restartGame() {
-      if (isHost) {
-        socket.emit('gameAction', {
-          gameCode,
-          action: 'restartGame'
-        });
-      }
+      socket.on('gameJoined', (data) => {
+        gameCode = data.gameCode; playerId = data.playerId; isHost = false;
+        document.getElementById('join-info').style.display = 'block';
+        updatePlayersList(data.players);
+      });
+      socket.on('playerJoined', (data) => updatePlayersList(data.players));
+      socket.on('playerLeft', (data) => updatePlayersList(data.players));
+      socket.on('gameStarted', (data) => { gameState = data.gameState; startMultiplayerGame(); });
+      socket.on('gameStateUpdate', (data) => { gameState = data.gameState; updateGameFromState(); });
+      socket.on('challengeReceived', (data) => receiveChallenge(data));
+      socket.on('cardRecallResult', (data) => handleCardRecallResult(data));
+      
+      socket.on('challengeResult', (data) => {
+        showGameMessage(data.message, 4000);
+        if (data.reveal) {
+          flipPlayerCard(data.reveal.playerId, data.reveal.cardValue);
+        }
+      });
+      socket.on('proveYourCard', (data) => showCardFlipModal(data.cardValue));
     }
 
-    // Screen navigation
     function showMenuScreen() {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('menu-screen').classList.add('active');
     }
-
     function showHostScreen() {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('host-screen').classList.add('active');
     }
-
     function showJoinScreen() {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('join-screen').classList.add('active');
     }
 
-    // Host game functions
     function hostGame() {
       const hostName = document.getElementById('host-name').value.trim() || 'Host Player';
-      
-      if (!socket || !socket.connected) {
-        showGameMessage('Connecting to server... Please try again in a moment.');
-        if (!socket) initSocket(); // Attempt to connect if not already
-        return;
-      }
-      
+      if (!socket || !socket.connected) return showGameMessage('Connecting...');
       socket.emit('hostGame', { playerName: hostName });
       document.getElementById('host-btn').disabled = true;
     }
@@ -668,70 +552,44 @@
     function joinGame() {
       const playerName = document.getElementById('join-name').value.trim() || 'Player';
       const code = document.getElementById('game-code-input').value.trim().toUpperCase();
-      
-      if (!code) {
-        showGameMessage('Please enter a game code');
-        return;
-      }
-
-      if (!socket || !socket.connected) {
-        showGameMessage('Connecting to server... Please try again in a moment.');
-        if (!socket) initSocket(); // Attempt to connect if not already
-        return;
-      }
-      
+      if (!code) return showGameMessage('Please enter a game code');
+      if (!socket || !socket.connected) return showGameMessage('Connecting...');
       socket.emit('joinGame', { gameCode: code, playerName: playerName });
       document.getElementById('join-btn').disabled = true;
     }
 
     function startHostedGame() {
-      if (Object.keys(connectedPlayers).length < 3) {
-        showGameMessage('Need at least 3 players to start');
-        return;
-      }
-      
+      if (Object.keys(connectedPlayers).length < 3) return showGameMessage('Need at least 3 players');
       socket.emit('startGame', { gameCode });
     }
 
-    // Update functions
     function updateConnectionStatus(connected) {
       const status = document.getElementById('connection-status');
-      if (status) {
-        status.textContent = connected ? 'Connected' : 'Disconnected';
-        status.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
-      }
+      status.textContent = connected ? 'Connected' : 'Disconnected';
+      status.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
     }
 
-    function updatePlayersList() {
+    function updatePlayersList(serverPlayers) {
+      connectedPlayers = serverPlayers;
       const hostList = document.getElementById('host-players-list');
       const joinList = document.getElementById('join-players-list');
-      
       const playerCount = Object.keys(connectedPlayers).length;
       
-      // Update start button state
       const startBtn = document.getElementById('start-game-btn');
       if (startBtn) {
-        const needed = Math.max(0, 3 - playerCount);
         startBtn.disabled = playerCount < 3;
-        startBtn.textContent = needed > 0 ? 
-          `Start Game (Need ${needed} more player${needed !== 1 ? 's' : ''})` : 
-          `Start Game (${playerCount} players)`;
+        startBtn.textContent = playerCount < 3 ? `Need ${3 - playerCount} more player(s)` : `Start Game (${playerCount} players)`;
       }
 
-      // Update both lists
       [hostList, joinList].forEach(list => {
         if (list) {
           list.innerHTML = '';
-          Object.entries(connectedPlayers).forEach(([id, player]) => {
+          Object.values(connectedPlayers).forEach(p => {
             const item = document.createElement('div');
             item.className = 'player-item';
-            if (player.isHost) item.classList.add('is-host');
-            if (id === playerId) item.classList.add('is-you');
-            
-            item.innerHTML = `
-              <span>${player.name} ${player.isHost ? '👑' : ''} ${id === playerId ? '(You)' : ''}</span>
-              <div class="status-indicator"></div>
-            `;
+            if (p.isHost) item.classList.add('is-host');
+            if (p.id === playerId) item.classList.add('is-you');
+            item.innerHTML = `<span>${p.name} ${p.isHost ? '👑' : ''} ${p.id === playerId ? '(You)' : ''}</span><div class="status-indicator"></div>`;
             list.appendChild(item);
           });
         }
@@ -741,403 +599,249 @@
     function startMultiplayerGame() {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('game-screen').classList.add('active');
-      
-      playerNames = gameState.playerNames;
-      players = gameState.players;
       myPlayerId = playerId;
-      
-      setupGameTable();
-      
-      if (isHost) {
-        document.getElementById('auto-start-btn').style.display = 'block';
-      }
-      
-      updateGameStatus('setup');
+      updateGameFromState();
     }
-
+    
     function setupGameTable() {
       const table = document.getElementById('table');
       table.innerHTML = '<div id="pyramid" class="pyramid"></div>';
-
-      const radius = 250;
-      const centerX = table.offsetWidth / 2;
-      const centerY = table.offsetHeight / 2;
-      const angleStep = (2 * Math.PI) / players.length;
+      const radius = 200, centerX = 175, centerY = 175, angleStep = 360 / players.length;
 
       players.forEach((pId, i) => {
-        const angle = angleStep * i - (Math.PI / 2);
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-      
+        const angle = angleStep * i;
+        const x = centerX + radius * Math.cos(angle * Math.PI / 180 - Math.PI / 2);
+        const y = centerY + radius * Math.sin(angle * Math.PI / 180 - Math.PI / 2);
         const playerEl = document.createElement('div');
         playerEl.className = 'player';
         playerEl.id = pId;
         playerEl.style.left = `${x}px`;
         playerEl.style.top = `${y}px`;
         playerEl.style.transform = 'translate(-50%, -50%)';
-        
         if (pId === myPlayerId) playerEl.classList.add('current-user');
         if (connectedPlayers[pId]?.isHost) playerEl.classList.add('is-host');
-        
-        playerHands[pId] = [];
-        drinkCounts[pId] = 0;
-        
-        playerEl.innerHTML = `
-          <div class="player-header">
-            <div class="player-name">${playerNames[i]}</div>
-            <div class="drink-counter" id="drinks-${pId}">Drinks: 0</div>
-          </div>
-          <div class="player-cards" id="cards-${pId}"></div>
-          <div class="player-actions" id="actions-${pId}" style="display:none;"></div>
-        `;
-        
+        playerEl.innerHTML = `<div class="player-header"><div class="player-name">${playerNames[i]}</div><div class="drink-counter" id="drinks-${pId}">Drinks: 0</div></div><div class="player-cards" id="cards-${pId}"></div><div class="player-actions" id="actions-${pId}" style="display:none;"></div>`;
         table.appendChild(playerEl);
       });
     }
 
-    // Game message system
     function showGameMessage(message, duration = 3000) {
-      const messageEl = document.getElementById('game-message');
-      messageEl.textContent = message;
-      messageEl.style.display = 'block';
-      
-      setTimeout(() => {
-        messageEl.style.display = 'none';
-      }, duration);
+      const el = document.getElementById('game-message');
+      el.textContent = message;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, duration);
     }
+    
+    function autoStart() { if (isHost) socket.emit('gameAction', { gameCode, action: 'autoStart' }); }
+    function startMemorizePhase() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startMemorize' }); }
+    function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
 
-    function autoStart() {
-      if (isHost) socket.emit('gameAction', { gameCode, action: 'autoStart' });
-    }
-
-    function startMemorizePhase() {
-      if (isHost) socket.emit('gameAction', { gameCode, action: 'startMemorize' });
-    }
-
-    function nextPyramidCard() {
-      if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' });
-    }
-
-    function admitBluff(cardValue) {
-      const modal = document.querySelector('.modal');
+    function admitBluff(cardValue, modal) {
       if (modal) modal.remove();
-      
-      const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
-      myCards.forEach(cardEl => {
-        cardEl.style.border = '';
-        cardEl.style.cursor = '';
-        cardEl.onclick = null;
-      });
-      
+      document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => { c.style.border = ''; c.style.cursor = ''; c.onclick = null; });
       socket.emit('proveCard', { gameCode, cardValue, proved: false });
     }
 
-    function showCardRecallInput(playerIndex) {
-      if (playerIndex >= players.length) {
-        if (isHost) socket.emit('gameAction', { gameCode, action: 'finishGame' });
-        return;
+    function showCardFlipModal(requiredCardValue) {
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.style.display = 'flex';
+      modal.innerHTML = `<div class="modal-content"><h3>Prove you have a ${requiredCardValue}!</h3><p>Click the ${requiredCardValue} in your hand.</p><button class="cancel-btn">I was bluffing</button></div>`;
+      document.body.appendChild(modal);
+      modal.querySelector('.cancel-btn').onclick = () => admitBluff(requiredCardValue, modal);
+      
+      const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
+      const myHand = playerHands[myPlayerId] || [];
+      myCards.forEach((cardEl, i) => {
+        if (myHand[i]?.value === requiredCardValue) {
+          cardEl.style.cursor = 'pointer';
+          cardEl.style.border = '3px solid #f1c40f';
+          cardEl.onclick = (e) => {
+            e.stopPropagation();
+            modal.remove();
+            socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: true });
+            myCards.forEach(c => { c.style.border = ''; c.style.cursor = ''; c.onclick = null; });
+          };
+        }
+      });
+    }
+
+    function flipPlayerCard(pId, cardValue) {
+      const pCards = document.querySelectorAll(`#${pId} .card`);
+      const pHand = playerHands[pId] || [];
+      for (let i = 0; i < pHand.length; i++) {
+        if (pHand[i].value === cardValue && !pCards[i].classList.contains('flipped')) {
+          pCards[i].classList.add('flipped');
+          break;
+        }
       }
+    }
+
+    function showCardRecallInput(playerIndex) {
+      if (playerIndex >= players.length) return;
       
       const currentPlayerId = players[playerIndex];
-      const currentPlayerName = playerNames[playerIndex];
-      
       if (currentPlayerId === myPlayerId) {
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.style.display = 'flex';
-        modal.innerHTML = `
-          <div class="modal-content">
-            <h3>${currentPlayerName}, recite your cards!</h3>
-            <p>Enter your 4 card values, separated by spaces (e.g., "A 5 K 2"):</p>
-            <input type="text" id="card-recall-input" style="width: 300px; margin: 10px 0;">
-            <div class="modal-buttons">
-              <button class="challenge-btn" onclick="submitCardRecall(${playerIndex})">Submit Cards</button>
-            </div>
-          </div>
-        `;
+        modal.innerHTML = `<div class="modal-content"><h3>Recite your cards!</h3><p>Enter your 4 card values (e.g., "A 5 K 2"):</p><input type="text" id="card-recall-input" style="width: 80%;"><div class="modal-buttons"><button class="challenge-btn">Submit</button></div></div>`;
         document.body.appendChild(modal);
-        document.getElementById('card-recall-input').focus();
+        const input = modal.querySelector('#card-recall-input');
+        input.focus();
+        modal.querySelector('.challenge-btn').onclick = () => {
+          if (!input.value.trim()) return showGameMessage('Please enter your cards');
+          socket.emit('verifyCardRecall', { gameCode, playerId, playerIndex, recalledCards: input.value });
+          modal.remove();
+        };
       } else {
-        showGameMessage(`${currentPlayerName} is reciting their cards...`);
+        showGameMessage(`${playerNames[playerIndex]} is reciting their cards...`);
       }
-    }
-
-    function submitCardRecall(playerIndex) {
-      const input = document.getElementById('card-recall-input');
-      const recalledCards = input.value.trim();
-      
-      if (!recalledCards) {
-        showGameMessage('Please enter your cards!');
-        return;
-      }
-      
-      socket.emit('verifyCardRecall', { gameCode, playerId: myPlayerId, playerIndex, recalledCards });
-      
-      const modal = input.closest('.modal');
-      if (modal) modal.remove();
     }
 
     function handleCardRecallResult(data) {
-      showGameMessage(data.correct ? `${data.playerName} got their cards right!` : `${data.playerName} was wrong! Penalty drink! 🍺`);
-      
-      setTimeout(() => {
-        showCardRecallInput(data.nextPlayerIndex);
-      }, 3000);
+      showGameMessage(data.correct ? `${data.playerName} was correct!` : `${data.playerName} was wrong! Penalty drink! 🍺`, 2500);
+      setTimeout(() => showCardRecallInput(data.nextPlayerIndex), 2800);
     }
-
+    
     function makeSomeoneDrink() {
-      if (!gameState.currentPyramidCard) {
-        showGameMessage("Wait for a pyramid card to be flipped first!");
-        return;
-      }
+      if (!gameState.currentPyramidCard) return showGameMessage("Wait for a card to be flipped!");
       showTargetModal();
     }
-
+    
     function showTargetModal() {
-      const targets = players.filter(p => p !== myPlayerId);
       const modal = document.getElementById('target-modal');
-      const buttonsContainer = document.getElementById('target-buttons');
-      
-      document.getElementById('target-message').textContent = `${playerNames[players.indexOf(myPlayerId)]}, choose who to make drink:`;
-      buttonsContainer.innerHTML = '';
-      
-      targets.forEach(targetId => {
-        const button = document.createElement('button');
-        button.className = 'target-player-btn';
-        button.textContent = playerNames[players.indexOf(targetId)];
-        button.onclick = () => selectTarget(targetId);
-        buttonsContainer.appendChild(button);
+      const buttons = document.getElementById('target-buttons');
+      buttons.innerHTML = '';
+      players.filter(p => p !== myPlayerId).forEach(targetId => {
+        const btn = document.createElement('button');
+        btn.className = 'target-player-btn';
+        btn.textContent = playerNames[players.indexOf(targetId)];
+        btn.onclick = () => { socket.emit('challenge', { gameCode, challengerId: myPlayerId, targetId }); modal.style.display = 'none'; };
+        buttons.appendChild(btn);
       });
-      
-      const cancelButton = document.createElement('button');
-      cancelButton.className = 'cancel-btn';
-      cancelButton.textContent = 'Cancel';
-      cancelButton.onclick = () => modal.style.display = 'none';
-      buttonsContainer.appendChild(cancelButton);
-      
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'cancel-btn';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.onclick = () => { modal.style.display = 'none'; };
+      buttons.appendChild(cancelBtn);
       modal.style.display = 'flex';
-    }
-
-    function selectTarget(targetId) {
-      document.getElementById('target-modal').style.display = 'none';
-      socket.emit('challenge', { gameCode, challengerId: myPlayerId, targetId });
     }
 
     function receiveChallenge(data) {
       if (data.targetId === myPlayerId) {
-        currentChallenger = data.challengerId;
-        currentTarget = data.targetId;
-        
+        currentChallenger = data.challengerId; currentTarget = data.targetId;
         document.getElementById('bluff-message').textContent = `${playerNames[players.indexOf(data.challengerId)]} wants you to drink!`;
         document.getElementById('bluff-modal').style.display = 'flex';
-      } else {
-        showGameMessage(`Challenge sent to ${playerNames[players.indexOf(data.targetId)]}! Waiting...`);
       }
     }
-
+    
     function acceptDrink() {
       document.getElementById('bluff-modal').style.display = 'none';
-      socket.emit('challengeResponse', { gameCode, challengerId: currentChallenger, targetId: currentTarget, response: 'accept' });
+      socket.emit('challengeResponse', { gameCode, response: 'accept' });
     }
-
     function callBluff() {
       document.getElementById('bluff-modal').style.display = 'none';
-      socket.emit('challengeResponse', { gameCode, challengerId: currentChallenger, targetId: currentTarget, response: 'challenge' });
+      socket.emit('challengeResponse', { gameCode, response: 'challenge' });
     }
 
     function updateGameFromState() {
+      if (!gameState || !gameState.players) return;
       gamePhase = gameState.phase;
-      currentPyramidCard = gameState.currentPyramidCard;
+      players = gameState.players;
+      playerNames = gameState.playerNames;
+      if (document.querySelectorAll('.player').length !== players.length) setupGameTable();
+
+      Object.entries(gameState.playerHands || {}).forEach(([pId, cards]) => { playerHands[pId] = cards; updatePlayerCardsDisplay(pId, cards); });
+      Object.entries(gameState.drinkCounts || {}).forEach(([pId, count]) => { if(document.getElementById(`drinks-${pId}`)) document.getElementById(`drinks-${pId}`).textContent = `Drinks: ${count}`; });
       
-      if (gameState.playerHands) {
-        Object.entries(gameState.playerHands).forEach(([pId, cards]) => {
-          playerHands[pId] = cards;
-          updatePlayerCardsDisplay(pId, cards);
-        });
-      }
-      
-      Object.entries(gameState.drinkCounts || {}).forEach(([pId, count]) => {
-        drinkCounts[pId] = count;
-        const counter = document.getElementById(`drinks-${pId}`);
-        if (counter) counter.textContent = `Drinks: ${count}`;
-      });
-      
-      updateGameStatus(gamePhase);
-      
-      if (gameState.pyramidCards) {
-        updatePyramidFromState(gameState.pyramidCards);
-      }
-      
-      if (currentPyramidCard) {
-        document.getElementById('current-card').textContent = currentPyramidCard;
-      }
-      
+      updatePyramidFromState(gameState.pyramidCards || []);
+      if (gameState.currentPyramidCard) document.getElementById('current-card').textContent = gameState.currentPyramidCard;
       showPlayerActions(gamePhase === 'pyramid');
+      updateGameStatus(gamePhase);
     }
 
     function updatePlayerCardsDisplay(pId, cards) {
-      const playerCardsDiv = document.getElementById(`cards-${pId}`);
-      if (!playerCardsDiv) return;
-      
-      playerCardsDiv.innerHTML = '';
-      cards.forEach(card => {
-        const cardEl = createPlayerCard(card, pId);
-        playerCardsDiv.appendChild(cardEl);
-      });
+      const container = document.getElementById(`cards-${pId}`);
+      if (!container) return;
+      container.innerHTML = '';
+      cards.forEach(card => container.appendChild(createCardElement(card)));
     }
 
-    function createPlayerCard(card, pId) {
-      const cardEl = document.createElement('div');
-      cardEl.className = 'card';
-      cardEl.innerHTML = `
-        <div class="card-inner">
-          <div class="card-front">${card.value}${card.suit}</div>
-          <div class="card-back">🂠</div>
-        </div>
-      `;
-      if (card.suit === '♥' || card.suit === '♦') {
-        cardEl.querySelector('.card-front').style.color = 'red';
-      }
-      cardEl.addEventListener('click', (e) => {
-        if (gamePhase === 'memorize' && pId === myPlayerId) {
-          e.currentTarget.classList.toggle('flipped');
-        }
-      });
-      return cardEl;
+    function createCardElement(card) {
+      const el = document.createElement('div');
+      el.className = 'card';
+      const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
+      el.innerHTML = `<div class="card-inner"><div class="card-front" style="color:${color};">${card.value}${card.suit}</div><div class="card-back">🂠</div></div>`;
+      return el;
     }
 
-    function updatePyramidFromState(pyramidCards) {
-      const pyramidEl = document.getElementById('pyramid');
-      pyramidEl.innerHTML = '';
+    function updatePyramidFromState(pyramid) {
+      const container = document.getElementById('pyramid');
+      container.innerHTML = '';
       let cardIndex = 0;
-      const rows = Math.floor((-1 + Math.sqrt(1 + 8 * pyramidCards.length)) / 2);
-
-      for (let row = 1; row <= rows; row++) {
+      for (let rows = 1; cardIndex < pyramid.length; rows++) {
         const rowEl = document.createElement('div');
         rowEl.className = 'row';
-        for (let i = 0; i < row; i++) {
-          const cardData = pyramidCards[cardIndex];
-          const cardEl = createPyramidCard(cardData, cardIndex);
-          if (cardData.revealed) cardEl.classList.add('flipped');
-          rowEl.appendChild(cardEl);
-          cardIndex++;
+        for (let i = 0; i < rows && cardIndex < pyramid.length; i++, cardIndex++) {
+          const card = createCardElement(pyramid[cardIndex]);
+          if (pyramid[cardIndex].revealed) card.classList.add('flipped');
+          rowEl.appendChild(card);
         }
-        pyramidEl.appendChild(rowEl);
+        container.appendChild(rowEl);
       }
     }
-
-    function createPyramidCard(cardData, index) {
-      const cardEl = document.createElement('div');
-      cardEl.className = 'card';
-      cardEl.dataset.index = index;
-      cardEl.innerHTML = `
-        <div class="card-inner">
-          <div class="card-front">${cardData.value}${cardData.suit}</div>
-          <div class="card-back">🂠</div>
-        </div>
-      `;
-      if (cardData.suit === '♥' || cardData.suit === '♦') {
-        cardEl.querySelector('.card-front').style.color = 'red';
-      }
-      return cardEl;
-    }
-
+    
     function updateGameStatus(phase) {
-      const phaseDisplay = document.getElementById('phase-display');
-      const timerDisplay = document.getElementById('timer-display');
-      const cardDisplay = document.getElementById('current-card-display');
-      const currentTurn = document.getElementById('current-turn');
-      
-      const buttons = ['auto-start-btn', 'memorize-btn', 'pyramid-btn'];
-      buttons.forEach(btn => document.getElementById(btn).style.display = 'none');
-      
-      const existingRestartBtn = document.getElementById('restart-btn');
-      if (existingRestartBtn) existingRestartBtn.remove();
-      
-      switch(phase) {
-        case 'setup':
-          phaseDisplay.textContent = 'Phase: Ready to deal';
-          currentTurn.textContent = 'Ready to Start!';
-          if (isHost) document.getElementById('auto-start-btn').style.display = 'block';
-          break;
-        case 'dealt':
-          phaseDisplay.textContent = 'Phase: Ready to memorize';
-          currentTurn.textContent = 'Cards Dealt!';
-          if (isHost) document.getElementById('memorize-btn').style.display = 'block';
-          break;
-        case 'memorize':
-          phaseDisplay.textContent = 'Phase: MEMORIZE!';
-          timerDisplay.style.display = 'block';
-          currentTurn.textContent = 'Memorize Your Cards!';
-          startLocalMemorizePhase();
-          break;
-        case 'pyramid':
-          phaseDisplay.textContent = 'Phase: Pyramid';
-          timerDisplay.style.display = 'none';
-          cardDisplay.style.display = 'block';
-          currentTurn.textContent = 'Pyramid Phase';
-          if (isHost) document.getElementById('pyramid-btn').style.display = 'block';
-          break;
-        case 'recall':
-          phaseDisplay.textContent = 'Phase: Recall';
-          currentTurn.textContent = 'Recall Your Cards!';
-          if (myPlayerId === players[0]) showCardRecallInput(0);
-          break;
-        case 'finished':
-          phaseDisplay.textContent = 'Phase: Game Over';
-          currentTurn.textContent = 'Game Finished!';
-          if (isHost) {
-            const restartBtn = document.createElement('button');
-            restartBtn.id = 'restart-btn';
-            restartBtn.textContent = 'Restart Game';
-            restartBtn.onclick = () => { restartGame(); restartBtn.remove(); };
-            document.querySelector('.phase-actions').appendChild(restartBtn);
+      const controls = { p: document.getElementById('phase-display'), t: document.getElementById('current-turn'), tm: document.getElementById('timer-display'), cd: document.getElementById('current-card-display') };
+      const btns = { auto: document.getElementById('auto-start-btn'), mem: document.getElementById('memorize-btn'), pyr: document.getElementById('pyramid-btn') };
+      Object.values(btns).forEach(b => b.style.display = 'none');
+      if (document.getElementById('restart-btn')) document.getElementById('restart-btn').remove();
+
+      switch (phase) {
+        case 'setup': controls.p.textContent = 'Phase: Ready'; controls.t.textContent = 'Ready to Start!'; if(isHost) btns.auto.style.display = 'block'; break;
+        case 'dealt': controls.p.textContent = 'Phase: Memorize'; controls.t.textContent = 'Cards Dealt!'; if(isHost) btns.mem.style.display = 'block'; break;
+        case 'memorize': controls.p.textContent = 'Phase: MEMORIZE!'; controls.t.textContent = 'Memorize!'; controls.tm.style.display = 'block'; startLocalMemorizePhase(); break;
+        case 'pyramid': controls.p.textContent = 'Phase: Pyramid'; controls.t.textContent = 'Pyramid'; controls.tm.style.display = 'none'; controls.cd.style.display = 'block'; if(isHost) btns.pyr.style.display = 'block'; break;
+        case 'recall': controls.p.textContent = 'Phase: Recall'; controls.t.textContent = 'Recall Cards!'; showCardRecallInput(0); break;
+        case 'finished': 
+          controls.p.textContent = 'Phase: Game Over'; 
+          controls.t.textContent = 'Game Finished!'; 
+          if(isHost) {
+            const btn = document.createElement('button');
+            btn.id = 'restart-btn';
+            btn.textContent = 'Restart Game';
+            btn.style.backgroundColor = '#27ae60';
+            btn.style.color = 'white';
+            btn.onclick = () => socket.emit('gameAction', { gameCode, action: 'restartGame' });
+            document.querySelector('.phase-actions').appendChild(btn);
           }
           break;
       }
     }
 
     function startLocalMemorizePhase() {
-      timeLeft = 30;
-      const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
-      myCards.forEach(card => card.classList.add('flipped'));
-      
-      memorizeTimer = setInterval(() => {
+      let timeLeft = 30;
+      document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => c.classList.add('flipped'));
+      const timer = setInterval(() => {
         timeLeft--;
         document.getElementById('countdown').textContent = timeLeft;
         if (timeLeft <= 0) {
-          clearInterval(memorizeTimer);
-          endLocalMemorizePhase();
+          clearInterval(timer);
+          document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => c.classList.remove('flipped'));
         }
       }, 1000);
-    }
-
-    function endLocalMemorizePhase() {
-      const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
-      myCards.forEach(card => card.classList.remove('flipped'));
     }
 
     function showPlayerActions(show) {
       const actions = document.getElementById(`actions-${myPlayerId}`);
       if (actions) {
-        if (show) {
-          actions.innerHTML = `<button class="action-btn target-btn" onclick="makeSomeoneDrink()">Make Drink</button>`;
-          actions.style.display = 'flex';
-        } else {
-          actions.style.display = 'none';
-        }
+        actions.style.display = show ? 'flex' : 'none';
+        if (show) actions.innerHTML = `<button class="action-btn target-btn" onclick="makeSomeoneDrink()">Make Drink</button>`;
       }
     }
-
-    function startRecallPhase() {
-        if (isHost) socket.emit('gameAction', { gameCode, action: 'startRecall' });
-    }
-
-    // Initialize when page loads
-    window.addEventListener('load', () => {
-      initSocket();
-    });
-
+    
+    window.addEventListener('load', initSocket);
   </script>
 </body>
 </html>
