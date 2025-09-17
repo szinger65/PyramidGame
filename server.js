@@ -47,7 +47,6 @@ function createGame(hostId, hostName) {
 }
 
 function buildPyramid(game) {
-  // *** FIX 1: Pyramid size is now correctly set to 6 rows ***
   const rows = 6;
   game.pyramidCards = [];
   for (let row = 1; row <= rows; row++) {
@@ -173,15 +172,11 @@ io.on('connection', (socket) => {
     const { targetId } = game.activeBluff;
     const challengerName = game.players[challengerId]?.name;
     const targetName = game.players[targetId]?.name;
-
     const hasCard = game.playerHands[challengerId].some(c => c.value === data.cardValue);
 
     if (data.proved && hasCard) {
       game.drinkCounts[targetId] += 2;
-      broadcastToGame(data.gameCode, 'challengeResult', {
-        message: `${challengerName} had the card! ${targetName} drinks twice! 🍺🍺`,
-        reveal: { playerId: challengerId, cardValue: data.cardValue }
-      });
+      broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} had the card! ${targetName} drinks twice! 🍺🍺`, reveal: { playerId: challengerId, cardValue: data.cardValue } });
     } else {
       game.drinkCounts[challengerId]++;
       broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} was bluffing! They drink! 🍺` });
@@ -191,6 +186,7 @@ io.on('connection', (socket) => {
     broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
   });
 
+  // *** FIX 4: Adjusted timing to prevent stuck host modal ***
   socket.on('verifyCardRecall', (data) => {
     const game = games.get(data.gameCode);
     if (!game) return;
@@ -201,12 +197,21 @@ io.on('connection', (socket) => {
 
     if (!correct) game.drinkCounts[playerId] = (game.drinkCounts[playerId] || 0) + 5;
 
-    broadcastToGame(data.gameCode, 'cardRecallResult', { playerName: game.players[playerId]?.name, correct, nextPlayerIndex: playerIndex + 1 });
+    // First, broadcast the result so clients can close modals
+    broadcastToGame(data.gameCode, 'cardRecallResult', {
+        playerName: game.players[playerId]?.name,
+        correct,
+        nextPlayerIndex: playerIndex + 1
+    });
 
+    // Then, if it's the last player, wait a moment before ending the game
     if (playerIndex + 1 >= game.playerOrder.length) {
-      game.phase = 'finished';
-      setTimeout(() => broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) }), 3000);
+        setTimeout(() => {
+            game.phase = 'finished';
+            broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
+        }, 3000); // 3-second delay to allow clients to process the final result
     }
+    
     broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
   });
 
