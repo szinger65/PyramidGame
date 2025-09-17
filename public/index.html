@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,397 +16,72 @@
             flex-direction: column;
             align-items: center;
         }
-
-        .screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .active {
-            display: flex;
-        }
-
-        select,
-        button,
-        input[type="text"] {
-            font-size: 1rem;
-            padding: 10px;
-            margin: 10px;
-            border-radius: 6px;
-            border: none;
-        }
-
-        input[type="text"] {
-            border: 1px solid #ccc;
-            width: 200px;
-        }
-
-        button {
-            background-color: #f1c40f;
-            font-weight: bold;
-            cursor: pointer;
-            min-width: 120px;
-        }
-
-        button:disabled {
-            background-color: #666;
-            cursor: not-allowed;
-        }
-
-        .connection-info {
-            background: rgba(52, 152, 219, 0.2);
-            border: 1px solid #3498db;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .game-code {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #f1c40f;
-            margin: 10px 0;
-            letter-spacing: 3px;
-        }
-
-        .players-list {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            min-height: 100px;
-        }
-
-        .player-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            margin: 5px 0;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-        }
-
-        .player-item.is-host {
-            border: 2px solid #f1c40f;
-        }
-
-        .player-item.is-you {
-            border: 2px solid #3498db;
-        }
-
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: #27ae60;
-        }
-
-        #table {
-            position: relative;
-            width: 400px;
-            height: 400px;
-            margin: 100px auto 0;
-            border-radius: 50%;
-            background: #228B22;
-        }
-
-        .pyramid {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .row {
-            display: flex;
-            justify-content: center;
-            margin: 4px 0;
-        }
-
-        .player {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border: 1px dashed white;
-            width: 140px;
-            padding: 8px;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 0.8rem;
-            border-radius: 8px;
-        }
-
-        .player.current-user {
-            background-color: rgba(52, 152, 219, 0.3);
-            border: 2px solid #3498db;
-        }
-
-        .player.is-host {
-            border-color: #f1c40f;
-        }
-
-        .player-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        .player-name {
-            font-size: 0.85rem;
-            font-weight: bold;
-            white-space: nowrap;
-            margin-bottom: 3px;
-        }
-
-        .drink-counter {
-            background: rgba(220, 53, 69, 0.8);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            min-width: 20px;
-            text-align: center;
-        }
-
-        .player-cards {
-            display: flex;
-            gap: 2px;
-            flex-wrap: nowrap;
-            justify-content: center;
-            margin-bottom: 5px;
-        }
-
-        .player-actions {
-            display: flex;
-            gap: 3px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .action-btn {
-            padding: 3px 6px;
-            font-size: 0.65rem;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .target-btn {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .card {
-            width: 25px;
-            height: 40px;
-            perspective: 600px;
-            cursor: default;
-        }
-
-        .card-inner {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s;
-        }
-
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
-
-        .card-front,
-        .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 4px;
-            border: 1px solid #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.7rem;
-        }
-
-        .card-back {
-            background: navy;
-            color: white;
-        }
-
-        .card-front {
-            background: white;
-            color: black;
-            transform: rotateY(180deg);
-        }
-
-        .pyramid .card {
-            width: 30px;
-            height: 50px;
-        }
-
-        .pyramid .card-front,
-        .pyramid .card-back {
-            font-size: 1.1rem;
-        }
-
-        #game-controls {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            max-width: 250px;
-        }
-
-        #current-turn {
-            background: rgba(52, 152, 219, 0.8);
-            padding: 5px 10px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .phase-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .phase-actions button {
-            padding: 8px 12px;
-            font-size: 0.8rem;
-            margin: 2px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: #2c2c2c;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 600px; }
+        .active { display: flex; }
+        select, button, input[type="text"] { font-size: 1rem; padding: 10px; margin: 10px; border-radius: 6px; border: none; }
+        input[type="text"] { border: 1px solid #ccc; width: 200px; }
+        button { background-color: #f1c40f; font-weight: bold; cursor: pointer; min-width: 120px; }
+        button:disabled { background-color: #666; cursor: not-allowed; }
+        .connection-info { background: rgba(52, 152, 219, 0.2); border: 1px solid #3498db; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center; }
+        .game-code { font-size: 1.5rem; font-weight: bold; color: #f1c40f; margin: 10px 0; letter-spacing: 3px; }
+        .players-list { background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin: 20px 0; min-height: 100px; }
+        .player-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; margin: 5px 0; background: rgba(255, 255, 255, 0.1); border-radius: 6px; }
+        .player-item.is-host { border: 2px solid #f1c40f; }
+        .player-item.is-you { border: 2px solid #3498db; }
+        .status-indicator { width: 12px; height: 12px; border-radius: 50%; background-color: #27ae60; }
+        #table { position: relative; width: 400px; height: 400px; margin: 100px auto 0; border-radius: 50%; background: #228B22; }
+        .pyramid { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .row { display: flex; justify-content: center; margin: 4px 0; }
+        .player { position: absolute; display: flex; flex-direction: column; gap: 2px; background-color: rgba(255, 255, 255, 0.1); border: 1px dashed white; width: 140px; padding: 8px; justify-content: center; align-items: center; color: white; font-size: 0.8rem; border-radius: 8px; }
+        .player.current-user { background-color: rgba(52, 152, 219, 0.3); border: 2px solid #3498db; }
+        .player.is-host { border-color: #f1c40f; }
+        .player-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 5px; }
+        .player-name { font-size: 0.85rem; font-weight: bold; white-space: nowrap; margin-bottom: 3px; }
+        .drink-counter { background: rgba(220, 53, 69, 0.8); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; min-width: 20px; text-align: center; }
+        .player-cards { display: flex; gap: 2px; flex-wrap: nowrap; justify-content: center; margin-bottom: 5px; }
+        .player-actions { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
+        .card { width: 25px; height: 40px; perspective: 600px; cursor: default; }
+        .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; }
+        .card-back { background: navy; color: white; }
+        .card-front { background: white; color: black; transform: rotateY(180deg); }
+        .pyramid .card { width: 30px; height: 50px; }
+        #game-controls { position: fixed; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.9); color: white; padding: 15px; border-radius: 8px; font-size: 0.9rem; max-width: 250px; }
+        #current-turn { background: rgba(52, 152, 219, 0.8); padding: 5px 10px; border-radius: 6px; margin-bottom: 10px; text-align: center; font-weight: bold; }
+        .phase-actions { display: flex; flex-direction: column; gap: 5px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: #2c2c2c; color: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 400px; width: 90%; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .accept-btn { background-color: #dc3545; color: white; }
+        .challenge-btn { background-color: #ffc107; color: black; }
+        .target-player-btn { background-color: #28a745; color: white; margin: 5px; min-width: 120px; }
+        .cancel-btn { background-color: #6c757d; color: white; }
+        .game-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.9); color: white; padding: 20px 30px; border-radius: 10px; font-size: 1.2rem; font-weight: bold; z-index: 1500; text-align: center; max-width: 400px; border: 2px solid #f1c40f; display: none; animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -60%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+        .connection-status { position: fixed; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.9); color: white; padding: 10px; border-radius: 6px; font-size: 0.9rem; }
+        .connection-status.connected { border: 2px solid #27ae60; }
+        .connection-status.disconnected { border: 2px solid #e74c3c; }
+        
+        /* *** FIX 1: Style for the new, non-blocking proof prompt *** */
+        .prove-prompt {
             margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .modal-buttons button {
-            padding: 10px 20px;
-            font-size: 1rem;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .accept-btn {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .challenge-btn {
+            padding: 10px;
             background-color: #ffc107;
             color: black;
-        }
-
-        .target-player-btn {
-            background-color: #28a745;
-            color: white;
-            margin: 5px;
-            min-width: 120px;
-        }
-
-        .cancel-btn {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .game-message {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 20px 30px;
-            border-radius: 10px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            z-index: 1500;
-            text-align: center;
-            max-width: 400px;
-            border: 2px solid #f1c40f;
-            display: none;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -60%);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%);
-            }
-        }
-
-        .connection-status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 10px;
             border-radius: 6px;
-            font-size: 0.9rem;
+            text-align: center;
         }
-
-        .connection-status.connected {
-            border: 2px solid #27ae60;
-        }
-
-        .connection-status.disconnected {
-            border: 2px solid #e74c3c;
+        .prove-prompt button {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            margin-top: 5px;
         }
     </style>
 </head>
+
 <body>
 
     <div id="menu-screen" class="screen active">
@@ -505,18 +181,8 @@
             socket.on('connect', () => updateConnectionStatus(true));
             socket.on('disconnect', () => updateConnectionStatus(false));
             socket.on('error', (err) => { showGameMessage(err.message); document.getElementById('host-btn').disabled = false; document.getElementById('join-btn').disabled = false; });
-
-            socket.on('gameCreated', (data) => {
-                gameCode = data.gameCode; playerId = data.playerId; isHost = true;
-                document.getElementById('host-game-code').textContent = gameCode;
-                document.getElementById('host-info').style.display = 'block';
-                updatePlayersList(data.players);
-            });
-            socket.on('gameJoined', (data) => {
-                gameCode = data.gameCode; playerId = data.playerId; isHost = false;
-                document.getElementById('join-info').style.display = 'block';
-                updatePlayersList(data.players);
-            });
+            socket.on('gameCreated', (data) => { gameCode = data.gameCode; playerId = data.playerId; isHost = true; document.getElementById('host-game-code').textContent = gameCode; document.getElementById('host-info').style.display = 'block'; updatePlayersList(data.players); });
+            socket.on('gameJoined', (data) => { gameCode = data.gameCode; playerId = data.playerId; isHost = false; document.getElementById('join-info').style.display = 'block'; updatePlayersList(data.players); });
             socket.on('playerJoined', (data) => updatePlayersList(data.players));
             socket.on('playerLeft', (data) => updatePlayersList(data.players));
             socket.on('gameStarted', (data) => { gameState = data.gameState; startMultiplayerGame(); });
@@ -527,18 +193,9 @@
             socket.on('proveYourCard', (data) => showCardFlipModal(data.cardValue));
         }
 
-        function showMenuScreen() {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('menu-screen').classList.add('active');
-        }
-        function showHostScreen() {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('host-screen').classList.add('active');
-        }
-        function showJoinScreen() {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('join-screen').classList.add('active');
-        }
+        function showMenuScreen() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('menu-screen').classList.add('active'); }
+        function showHostScreen() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('host-screen').classList.add('active'); }
+        function showJoinScreen() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('join-screen').classList.add('active'); }
 
         function hostGame() {
             const hostName = document.getElementById('host-name').value.trim() || 'Host';
@@ -595,7 +252,7 @@
             myPlayerId = playerId;
             updateGameFromState();
         }
-        
+
         function setupGameTable() {
             const table = document.getElementById('table');
             table.innerHTML = '<div id="pyramid" class="pyramid"></div>';
@@ -618,30 +275,24 @@
             });
         }
 
-        function showGameMessage(msg, dur = 3000) {
-            const el = document.getElementById('game-message');
-            el.textContent = msg;
-            el.style.display = 'block';
-            setTimeout(() => el.style.display = 'none', dur);
-        }
-
+        function showGameMessage(msg, dur = 3000) { const el = document.getElementById('game-message'); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', dur); }
         function autoStart() { if (isHost) socket.emit('gameAction', { gameCode, action: 'autoStart' }); }
         function startMemorizePhase() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startMemorize' }); }
         function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
 
+        // *** FIX 1: This function no longer uses a blocking modal ***
         function showCardFlipModal(requiredCardValue) {
-            const existingModal = document.getElementById('prove-card-modal');
-            if (existingModal) existingModal.remove();
+            const existingPrompt = document.getElementById('prove-card-prompt');
+            if (existingPrompt) existingPrompt.remove();
 
-            const modal = document.createElement('div');
-            modal.id = 'prove-card-modal';
-            modal.className = 'modal';
-            modal.style.display = 'flex';
-            modal.innerHTML = `<div class="modal-content"><h3>Prove you have a ${requiredCardValue}!</h3><p>Click the ${requiredCardValue} in your hand.</p><button class="cancel-btn">I was bluffing</button></div>`;
-            document.body.appendChild(modal);
+            const prompt = document.createElement('div');
+            prompt.id = 'prove-card-prompt';
+            prompt.className = 'prove-prompt';
+            prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click the card or <button>admit bluff</button>.`;
+            document.getElementById('game-controls').appendChild(prompt);
 
             const cleanup = () => {
-                modal.remove();
+                prompt.remove();
                 document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => {
                     c.style.border = '';
                     c.style.cursor = 'default';
@@ -649,14 +300,14 @@
                 });
             };
 
-            modal.querySelector('.cancel-btn').onclick = () => {
+            prompt.querySelector('button').onclick = () => {
                 cleanup();
                 socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false });
             };
-            
+
             const myCardElements = document.querySelectorAll(`#${myPlayerId} .card`);
             const myHandData = playerHands[myPlayerId] || [];
-            
+
             myCardElements.forEach((cardEl, i) => {
                 if (myHandData[i]?.value === requiredCardValue) {
                     cardEl.style.cursor = 'pointer';
@@ -704,7 +355,7 @@
             showGameMessage(data.correct ? `${data.playerName} was correct!` : `${data.playerName} was wrong! Penalty! 🍺`, 2500);
             setTimeout(() => showCardRecallInput(data.nextPlayerIndex), 2800);
         }
-        
+
         function makeSomeoneDrink() {
             if (!gameState.currentPyramidCard) return showGameMessage("Wait for a card!");
             const modal = document.getElementById('target-modal');
@@ -732,7 +383,7 @@
                 document.getElementById('bluff-modal').style.display = 'flex';
             }
         }
-        
+
         function acceptDrink() { document.getElementById('bluff-modal').style.display = 'none'; socket.emit('challengeResponse', { gameCode, response: 'accept' }); }
         function callBluff() { document.getElementById('bluff-modal').style.display = 'none'; socket.emit('challengeResponse', { gameCode, response: 'challenge' }); }
 
@@ -742,8 +393,8 @@
             if (document.querySelectorAll('.player').length !== players.length) setupGameTable();
 
             Object.entries(gameState.playerHands || {}).forEach(([pId, cards]) => { playerHands[pId] = cards; updatePlayerCardsDisplay(pId, cards); });
-            Object.entries(gameState.drinkCounts || {}).forEach(([pId, count]) => { if(document.getElementById(`drinks-${pId}`)) document.getElementById(`drinks-${pId}`).textContent = `Drinks: ${count}`; });
-            
+            Object.entries(gameState.drinkCounts || {}).forEach(([pId, count]) => { if (document.getElementById(`drinks-${pId}`)) document.getElementById(`drinks-${pId}`).textContent = `Drinks: ${count}`; });
+
             updatePyramidFromState(gameState.pyramidCards || []);
             if (gameState.currentPyramidCard) document.getElementById('current-card').textContent = gameState.currentPyramidCard;
             showPlayerActions(gameState.phase === 'pyramid');
@@ -780,7 +431,7 @@
                 container.appendChild(rowEl);
             }
         }
-        
+
         function updateGameStatus(phase) {
             const ctrls = { p: document.getElementById('phase-display'), t: document.getElementById('current-turn'), tm: document.getElementById('timer-display'), cd: document.getElementById('current-card-display') };
             const btns = { auto: document.getElementById('auto-start-btn'), mem: document.getElementById('memorize-btn'), pyr: document.getElementById('pyramid-btn') };
@@ -788,19 +439,15 @@
             if (document.getElementById('restart-btn')) document.getElementById('restart-btn').remove();
 
             switch (phase) {
-                case 'setup': ctrls.p.textContent = 'Phase: Ready'; ctrls.t.textContent = 'Ready to Start!'; if(isHost) btns.auto.style.display = 'block'; break;
-                case 'dealt': ctrls.p.textContent = 'Phase: Memorize'; ctrls.t.textContent = 'Cards Dealt!'; if(isHost) btns.mem.style.display = 'block'; break;
+                case 'setup': ctrls.p.textContent = 'Phase: Ready'; ctrls.t.textContent = 'Ready to Start!'; if (isHost) btns.auto.style.display = 'block'; break;
+                case 'dealt': ctrls.p.textContent = 'Phase: Memorize'; ctrls.t.textContent = 'Cards Dealt!'; if (isHost) btns.mem.style.display = 'block'; break;
                 case 'memorize': ctrls.p.textContent = 'Phase: MEMORIZE!'; ctrls.t.textContent = 'Memorize!'; ctrls.tm.style.display = 'block'; startLocalMemorizePhase(); break;
-                case 'pyramid': ctrls.p.textContent = 'Phase: Pyramid'; ctrls.t.textContent = 'Pyramid'; ctrls.tm.style.display = 'none'; ctrls.cd.style.display = 'block'; if(isHost) btns.pyr.style.display = 'block'; break;
+                case 'pyramid': ctrls.p.textContent = 'Phase: Pyramid'; ctrls.t.textContent = 'Pyramid'; ctrls.tm.style.display = 'none'; ctrls.cd.style.display = 'block'; if (isHost) btns.pyr.style.display = 'block'; break;
                 case 'recall': ctrls.p.textContent = 'Phase: Recall'; ctrls.t.textContent = 'Recall Cards!'; showCardRecallInput(0); break;
-                case 'finished': 
-                    ctrls.p.textContent = 'Phase: Game Over'; ctrls.t.textContent = 'Game Finished!'; 
-                    if(isHost) {
-                        const btn = document.createElement('button');
-                        btn.id = 'restart-btn';
-                        btn.textContent = 'Restart Game';
-                        btn.style.backgroundColor = '#27ae60';
-                        btn.style.color = 'white';
+                case 'finished':
+                    ctrls.p.textContent = 'Phase: Game Over'; ctrls.t.textContent = 'Game Finished!';
+                    if (isHost) {
+                        const btn = document.createElement('button'); btn.id = 'restart-btn'; btn.textContent = 'Restart Game'; btn.style.backgroundColor = '#27ae60'; btn.style.color = 'white';
                         btn.onclick = () => socket.emit('gameAction', { gameCode, action: 'restartGame' });
                         document.querySelector('.phase-actions').appendChild(btn);
                     }
@@ -809,16 +456,11 @@
         }
 
         function startLocalMemorizePhase() {
-            let timeLeft = 30;
-            document.getElementById('countdown').textContent = timeLeft;
+            let timeLeft = 30; document.getElementById('countdown').textContent = timeLeft;
             document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => c.classList.add('flipped'));
             const timer = setInterval(() => {
-                timeLeft--;
-                document.getElementById('countdown').textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => c.classList.remove('flipped'));
-                }
+                timeLeft--; document.getElementById('countdown').textContent = timeLeft;
+                if (timeLeft <= 0) { clearInterval(timer); document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => c.classList.remove('flipped')); }
             }, 1000);
         }
 
@@ -829,7 +471,7 @@
                 if (show) actions.innerHTML = `<button class="action-btn target-btn" onclick="makeSomeoneDrink()">Make Drink</button>`;
             }
         }
-        
+
         window.addEventListener('load', initSocket);
     </script>
 </body>
