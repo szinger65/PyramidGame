@@ -14,13 +14,11 @@ const io = socketIo(server, {
   }
 });
 
-// *** THE FINAL FIX IS HERE ***
-// 1. Tell Express that the 'public' folder is where to find static files like index.html.
-app.use(express.static(path.join(__dirname, 'public')));
+const ROOT_DIR = process.cwd();
 
-// 2. When a user goes to the main URL ('/'), send them the index.html file from inside the 'public' folder.
+app.use(express.static(path.join(ROOT_DIR, 'public')));
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(ROOT_DIR, 'public', 'index.html'));
 });
 
 app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() }));
@@ -58,7 +56,10 @@ function buildPyramid(game) {
   game.pyramidCards = [];
   for (let row = 1; row <= rows; row++) {
     for (let i = 0; i < row; i++) {
-      if (game.deck.length > 0) { const card = game.deck.pop(); game.pyramidCards.push({ ...card, revealed: false }); }
+      if (game.deck.length > 0) {
+        const card = game.deck.pop();
+        game.pyramidCards.push({ ...card, revealed: false });
+      }
     }
   }
 }
@@ -152,6 +153,7 @@ io.on('connection', (socket) => {
   socket.on('challengeResponse', (data) => {
     const game = games.get(data.gameCode);
     if (!game || !game.activeBluff) return;
+
     const { challengerId, targetId } = game.activeBluff;
     const challengerName = game.players[challengerId]?.name;
     const targetName = game.players[targetId]?.name;
@@ -176,14 +178,19 @@ io.on('connection', (socket) => {
     const { targetId } = game.activeBluff;
     const challengerName = game.players[challengerId]?.name;
     const targetName = game.players[targetId]?.name;
-    const hasCard = game.playerHands[challengerId].some(c => c.value === data.cardValue);
 
-    if (data.proved && hasCard) {
-      game.drinkCounts[targetId] += 2;
-      broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} had the card! ${targetName} drinks twice! 🍺🍺`, reveal: { playerId: challengerId, cardValue: data.cardValue } });
+    // *** FIX 3: Check data.proved flag for drink counting ***
+    if (data.proved) {
+        // Successful proof (whether they had the card or not, they proved something)
+        game.drinkCounts[targetId] += 2;
+        broadcastToGame(data.gameCode, 'challengeResult', { 
+            message: `${challengerName} proved it! ${targetName} drinks twice! 🍺🍺`, 
+            reveal: { playerId: challengerId, cardValue: data.cardValue } 
+        });
     } else {
+      // Admit bluff (data.proved == false)
       game.drinkCounts[challengerId]++;
-      broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} was bluffing! They drink! 🍺` });
+      broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} admitted bluffing! They drink! 🍺` });
     }
     
     game.activeBluff = null;
