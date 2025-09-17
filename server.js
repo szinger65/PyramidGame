@@ -139,11 +139,11 @@ function getGameState(game) {
     phase: game.phase,
     playerNames: game.playerOrder.map(id => game.players[id].name),
     players: game.playerOrder,
+    playerHands: game.playerHands,
     drinkCounts: game.drinkCounts,
     pyramidCards: game.pyramidCards,
     currentPyramidCard: game.currentPyramidCard,
-    flipIndex: game.flipIndex,
-    currentRecallPlayer: game.currentRecallPlayer
+    flipIndex: game.flipIndex
   };
 }
 
@@ -262,7 +262,7 @@ io.on('connection', (socket) => {
           // Deal cards and build pyramid
           dealCards(game);
           buildPyramid(game);
-          game.phase = 'setup';
+          game.phase = 'dealt';
           break;
           
         case 'startMemorize':
@@ -284,12 +284,28 @@ io.on('connection', (socket) => {
             const card = game.pyramidCards[game.flipIndex];
             game.currentPyramidCard = `${card.value}${card.suit}`;
             game.flipIndex++;
+            
+            // Check if all pyramid cards are flipped
+            if (game.flipIndex >= game.pyramidCards.length) {
+              game.phase = 'finished';
+            }
           }
           break;
           
-        case 'startRecall':
-          game.phase = 'recall';
-          game.currentRecallPlayer = 0;
+        case 'restartGame':
+          // Reset game state
+          game.phase = 'setup';
+          game.deck = createDeck();
+          game.playerHands = {};
+          game.drinkCounts = {};
+          game.pyramidCards = [];
+          game.currentPyramidCard = null;
+          game.flipIndex = 0;
+          
+          // Reset drink counts
+          game.playerOrder.forEach(playerId => {
+            game.drinkCounts[playerId] = 0;
+          });
           break;
       }
       
