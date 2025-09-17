@@ -31,7 +31,6 @@
         .drink-counter { background: rgba(220, 53, 69, 0.8); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; min-width: 20px; text-align: center; }
         .player-cards { display: flex; gap: 2px; flex-wrap: nowrap; justify-content: center; margin-bottom: 5px; }
         .card { width: 25px; height: 40px; perspective: 600px; cursor: default; }
-        /* *** FIX 2: Restored card-inner for animations *** */
         .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
         .card.flipped .card-inner { transform: rotateY(180deg); }
         .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; }
@@ -41,6 +40,8 @@
         #game-controls { position: fixed; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.9); color: white; padding: 15px; border-radius: 8px; font-size: 0.9rem; max-width: 250px; }
         #current-turn { background: rgba(52, 152, 219, 0.8); padding: 5px 10px; border-radius: 6px; margin-bottom: 10px; text-align: center; font-weight: bold; }
         .phase-actions { display: flex; flex-direction: column; gap: 5px; }
+        /* *** FIX 1: Corrected timer display style *** */
+        #timer-display { display: block; } /* Should be visible by default, JS will hide/show */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: #2c2c2c; color: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 400px; width: 90%; }
         .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
@@ -156,25 +157,36 @@
         function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
         function startRecall() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startRecall' }); }
 
+        // *** FIX 2: Rewritten to make all cards clickable ***
         function showCardFlipModal(requiredCardValue) {
             const prompt = document.getElementById('prove-card-prompt');
-            prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click the card or <button>admit bluff</button>.`;
+            prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click one of your cards or <button>admit bluff</button>.`;
             prompt.style.display = 'block';
 
-            const cleanup = () => { prompt.style.display = 'none'; document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => { c.style.border = ''; c.style.cursor = 'default'; c.onclick = null; }); };
+            const cleanup = () => {
+                prompt.style.display = 'none';
+                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => {
+                    c.style.cursor = 'default';
+                    c.onclick = null;
+                });
+            };
 
-            prompt.querySelector('button').onclick = () => { cleanup(); socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false }); };
+            prompt.querySelector('button').onclick = () => {
+                cleanup();
+                socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false });
+            };
             
             const myCardElements = document.querySelectorAll(`#${myPlayerId} .card`);
-            const myHandData = playerHands[myPlayerId] || [];
-            
             myCardElements.forEach((cardEl, i) => {
-                if (myHandData[i]?.value === requiredCardValue) {
-                    cardEl.style.cursor = 'pointer';
-                    // *** FIX 1: Removed the highlight border ***
-                    // cardEl.style.border = '3px solid #f1c40f'; 
-                    cardEl.onclick = () => { cleanup(); socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: true }); };
-                }
+                cardEl.style.cursor = 'pointer';
+                cardEl.onclick = () => {
+                    const cardValueInHand = playerHands[myPlayerId][i].value;
+                    const proved = (cardValueInHand === requiredCardValue);
+                    cleanup();
+                    // Flip the card the user clicked on
+                    setTimeout(() => cardEl.classList.add('flipped'), 10);
+                    socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: proved });
+                };
             });
         }
 
@@ -183,7 +195,6 @@
             const pHand = playerHands[pId] || [];
             for (let i = 0; i < pHand.length; i++) {
                 if (pHand[i].value === cardValue && !pCards[i].classList.contains('flipped')) {
-                    // *** FIX 2: Added timeout to ensure animation runs ***
                     setTimeout(() => pCards[i].classList.add('flipped'), 10);
                     break;
                 }
@@ -217,9 +228,7 @@
             const buttons = document.getElementById('target-buttons');
             buttons.innerHTML = '';
             players.filter(p => p !== myPlayerId).forEach(targetId => {
-                const btn = document.createElement('button');
-                btn.className = 'target-player-btn';
-                btn.textContent = playerNames[players.indexOf(targetId)];
+                const btn = document.createElement('button'); btn.className = 'target-player-btn'; btn.textContent = playerNames[players.indexOf(targetId)];
                 btn.onclick = () => { socket.emit('challenge', { gameCode, challengerId: myPlayerId, targetId }); modal.style.display = 'none'; };
                 buttons.appendChild(btn);
             });
@@ -241,11 +250,14 @@
         function updateGameFromState() {
             if (!gameState || !gameState.players) return;
             players = gameState.players; playerNames = gameState.playerNames;
-            if (document.querySelectorAll('.player').length !== players.length) setupGameTable();
+            
+            // *** FIX 3: Force a table redraw on restart ***
+            if (gameState.phase === 'setup' || document.querySelectorAll('.player').length !== players.length) {
+                setupGameTable();
+            }
 
             Object.entries(gameState.playerHands || {}).forEach(([pId, cards]) => { playerHands[pId] = cards; updatePlayerCardsDisplay(pId, cards); });
             Object.entries(gameState.drinkCounts || {}).forEach(([pId, count]) => { if (document.getElementById(`drinks-${pId}`)) document.getElementById(`drinks-${pId}`).textContent = `Drinks: ${count}`; });
-
             updatePyramidFromState(gameState.pyramidCards || []);
             if (gameState.currentPyramidCard) document.getElementById('current-card').textContent = gameState.currentPyramidCard;
             showPlayerActions(gameState.phase === 'pyramid');
@@ -269,7 +281,7 @@
 
         function updatePyramidFromState(pyramidData) {
             const container = document.getElementById('pyramid');
-            if (!container.hasChildNodes()) { // If empty, build it from scratch
+            if (!container.hasChildNodes()) {
                 let cardIndex = 0;
                 for (let rows = 1; cardIndex < pyramidData.length; rows++) {
                     const rowEl = document.createElement('div');
@@ -281,12 +293,11 @@
                     }
                     container.appendChild(rowEl);
                 }
-            } else { // If already built, just flip the correct card
+            } else {
                 pyramidData.forEach((cardData, index) => {
                     if (cardData.revealed) {
                         const cardEl = container.querySelectorAll('.card')[index];
                         if (cardEl && !cardEl.classList.contains('flipped')) {
-                             // *** FIX 2: Added timeout to ensure animation runs ***
                             setTimeout(() => cardEl.classList.add('flipped'), 10);
                         }
                     }
@@ -295,17 +306,23 @@
         }
         
         function updateGameStatus(phase) {
-            const ctrls = { p: document.getElementById('phase-display'), t: document.getElementById('current-turn') };
+            const ctrls = { p: document.getElementById('phase-display'), t: document.getElementById('current-turn'), tm: document.getElementById('timer-display'), cd: document.getElementById('current-card-display') };
             const btns = { auto: document.getElementById('auto-start-btn'), mem: document.getElementById('memorize-btn'), pyr: document.getElementById('pyramid-btn'), rec: document.getElementById('recall-btn') };
             Object.values(btns).forEach(b => b.style.display = 'none');
             if (document.getElementById('restart-btn')) document.getElementById('restart-btn').remove();
 
             const allPyramidCardsFlipped = gameState.pyramidCards && gameState.pyramidCards.every(c => c.revealed);
 
+            ctrls.tm.style.display = 'none'; // Hide timer by default
+
             switch (phase) {
                 case 'setup': ctrls.p.textContent = 'Phase: Ready'; ctrls.t.textContent = 'Ready to Start!'; if (isHost) btns.auto.style.display = 'block'; break;
                 case 'dealt': ctrls.p.textContent = 'Phase: Memorize'; ctrls.t.textContent = 'Cards Dealt!'; if (isHost) btns.mem.style.display = 'block'; break;
-                case 'memorize': ctrls.p.textContent = 'Phase: MEMORIZE!'; ctrls.t.textContent = 'Memorize!'; startLocalMemorizePhase(); break;
+                case 'memorize': 
+                    ctrls.p.textContent = 'Phase: MEMORIZE!'; ctrls.t.textContent = 'Memorize!'; 
+                    ctrls.tm.style.display = 'block'; // *** FIX 1: Explicitly show timer ***
+                    startLocalMemorizePhase(); 
+                    break;
                 case 'pyramid':
                     ctrls.p.textContent = 'Phase: Pyramid'; ctrls.t.textContent = 'Pyramid';
                     if (isHost && !allPyramidCardsFlipped) btns.pyr.style.display = 'block';
@@ -323,7 +340,6 @@
             }
         }
 
-        // *** FIX 1: This function now only flips the local player's cards ***
         function startLocalMemorizePhase() {
             let timeLeft = 30;
             document.getElementById('countdown').textContent = timeLeft;
