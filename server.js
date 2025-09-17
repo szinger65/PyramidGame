@@ -9,13 +9,12 @@ const server = http.createServer(app);
 
 const io = socketIo(server, {
   cors: {
-    origin: "*", // Allows connections from any origin for local development
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.use(express.static('.'));
 app.get('/health', (req, res) => res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() }));
 
 const games = new Map();
@@ -38,7 +37,7 @@ function shuffle(deck) {
 
 function createGame(hostId, hostName) {
   const gameCode = generateGameCode();
-  const game = { code: gameCode, host: hostId, players: {}, playerOrder: [], phase: 'lobby', deck: [], playerHands: {}, drinkCounts: {}, pyramidCards: [], currentPyramidCard: null, flipIndex: 0, activeBluff: null };
+  const game = { code: gameCode, host: hostId, players: {}, playerOrder: [], phase: 'lobby', deck: [], playerHands: {}, drinkCounts: {}, pyramidCards: [], currentPyramidCard: null, flipIndex: 0, activeBluff: null, currentRecallPlayerIndex: 0 };
   game.players[hostId] = { id: hostId, name: hostName, isHost: true, connected: true };
   game.playerOrder.push(hostId);
   game.drinkCounts[hostId] = 0;
@@ -51,10 +50,7 @@ function buildPyramid(game) {
   game.pyramidCards = [];
   for (let row = 1; row <= rows; row++) {
     for (let i = 0; i < row; i++) {
-      if (game.deck.length > 0) {
-        const card = game.deck.pop();
-        game.pyramidCards.push({ ...card, revealed: false });
-      }
+      if (game.deck.length > 0) { const card = game.deck.pop(); game.pyramidCards.push({ ...card, revealed: false }); }
     }
   }
 }
@@ -123,8 +119,13 @@ io.on('connection', (socket) => {
           const card = game.pyramidCards[game.flipIndex];
           game.currentPyramidCard = `${card.value}${card.suit}`;
           game.flipIndex++;
-          if (game.flipIndex >= game.pyramidCards.length) { game.phase = 'recall'; setTimeout(() => broadcastToGame(data.gameCode, 'startCardRecall', {}), 1000); }
         }
+        break;
+      // *** FIX 3: New action for host to manually start the recall phase ***
+      case 'startRecall':
+        game.phase = 'recall';
+        game.currentRecallPlayerIndex = 0; // Reset index
+        broadcastToGame(game.code, 'beginRecallTurn', { playerIndex: 0 });
         break;
       case 'restartGame':
         game.phase = 'setup'; game.deck = createDeck(); game.playerHands = {}; game.pyramidCards = []; game.currentPyramidCard = null; game.flipIndex = 0;
@@ -144,7 +145,6 @@ io.on('connection', (socket) => {
   socket.on('challengeResponse', (data) => {
     const game = games.get(data.gameCode);
     if (!game || !game.activeBluff) return;
-
     const { challengerId, targetId } = game.activeBluff;
     const challengerName = game.players[challengerId]?.name;
     const targetName = game.players[targetId]?.name;
@@ -158,16 +158,13 @@ io.on('connection', (socket) => {
       broadcastToGame(data.gameCode, 'challengeResult', { message: `${targetName} calls ${challengerName}'s bluff!` });
       const cardValue = game.currentPyramidCard.replace(/[♠♥♦♣]/g, '');
       const challengerSocket = playerSockets.get(challengerId);
-      if (challengerSocket) {
-        challengerSocket.emit('proveYourCard', { cardValue });
-      }
+      if (challengerSocket) challengerSocket.emit('proveYourCard', { cardValue });
     }
   });
 
   socket.on('proveCard', (data) => {
     const game = games.get(data.gameCode);
     if (!game || !game.activeBluff) return;
-
     const challengerId = socket.id;
     const { targetId } = game.activeBluff;
     const challengerName = game.players[challengerId]?.name;
@@ -186,30 +183,29 @@ io.on('connection', (socket) => {
     broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
   });
 
-  // *** FIX 4: Adjusted timing to prevent stuck host modal ***
+  // *** FIX 3: Revamped recall logic to prevent skipping players ***
   socket.on('verifyCardRecall', (data) => {
     const game = games.get(data.gameCode);
     if (!game) return;
-    const { playerId, playerIndex } = data;
+    const { playerId } = data;
     const actualCardValues = (game.playerHands[playerId] || []).map(c => c.value).sort();
     const recalledCardValues = parseRecalledCards(data.recalledCards).sort();
     const correct = arraysEqual(actualCardValues, recalledCardValues);
 
     if (!correct) game.drinkCounts[playerId] = (game.drinkCounts[playerId] || 0) + 5;
 
-    // First, broadcast the result so clients can close modals
-    broadcastToGame(data.gameCode, 'cardRecallResult', {
-        playerName: game.players[playerId]?.name,
-        correct,
-        nextPlayerIndex: playerIndex + 1
-    });
+    broadcastToGame(data.gameCode, 'cardRecallResult', { playerName: game.players[playerId]?.name, correct });
 
-    // Then, if it's the last player, wait a moment before ending the game
-    if (playerIndex + 1 >= game.playerOrder.length) {
+    game.currentRecallPlayerIndex++;
+    if (game.currentRecallPlayerIndex < game.playerOrder.length) {
+        setTimeout(() => {
+            broadcastToGame(game.code, 'beginRecallTurn', { playerIndex: game.currentRecallPlayerIndex });
+        }, 3000);
+    } else {
         setTimeout(() => {
             game.phase = 'finished';
             broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
-        }, 3000); // 3-second delay to allow clients to process the final result
+        }, 3000);
     }
     
     broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
