@@ -6,16 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pyramid Card Game - Multiplayer</title>
     <style>
-        body {
-            background-color: #1a1a1a;
-            font-family: Arial, sans-serif;
-            color: white;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        body { background-color: #1a1a1a; font-family: Arial, sans-serif; color: white; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 600px; }
         .active { display: flex; }
         select, button, input[type="text"] { font-size: 1rem; padding: 10px; margin: 10px; border-radius: 6px; border: none; }
@@ -40,6 +31,7 @@
         .drink-counter { background: rgba(220, 53, 69, 0.8); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; min-width: 20px; text-align: center; }
         .player-cards { display: flex; gap: 2px; flex-wrap: nowrap; justify-content: center; margin-bottom: 5px; }
         .card { width: 25px; height: 40px; perspective: 600px; cursor: default; }
+        /* *** FIX 2: Restored card-inner for animations *** */
         .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
         .card.flipped .card-inner { transform: rotateY(180deg); }
         .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; }
@@ -68,96 +60,18 @@
 </head>
 
 <body>
-    <div id="menu-screen" class="screen active">
-        <h1>🃏 Pyramid Card Game</h1>
-        <h2>Choose Game Mode</h2>
-        <button onclick="showHostScreen()">Host New Game</button>
-        <button onclick="showJoinScreen()">Join Game</button>
-    </div>
-
-    <div id="host-screen" class="screen">
-        <h1>🃏 Host New Game</h1>
-        <label for="host-name">Your Name:</label>
-        <input type="text" id="host-name" value="Host">
-        <button onclick="hostGame()" id="host-btn">Create Game</button>
-        <button onclick="showMenuScreen()">Back</button>
-        <div id="host-info" style="display:none;">
-            <div class="connection-info">
-                <h3>Game Created!</h3>
-                <p>Share this code:</p>
-                <div class="game-code" id="host-game-code">...</div>
-            </div>
-            <div class="players-list">
-                <h4>Players in Game:</h4>
-                <div id="host-players-list"></div>
-            </div>
-            <button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game</button>
-        </div>
-    </div>
-
-    <div id="join-screen" class="screen">
-        <h1>🃏 Join Game</h1>
-        <label for="join-name">Your Name:</label>
-        <input type="text" id="join-name" value="Player">
-        <label for="game-code-input">Game Code:</label>
-        <input type="text" id="game-code-input" style="text-transform:uppercase;">
-        <button onclick="joinGame()" id="join-btn">Join</button>
-        <button onclick="showMenuScreen()">Back</button>
-        <div id="join-info" style="display:none;">
-            <div class="connection-info">
-                <h3>Joined Game!</h3>
-                <p>Waiting for host...</p>
-            </div>
-            <div class="players-list">
-                <h4>Players in Game:</h4>
-                <div id="join-players-list"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="game-screen" class="screen">
-        <h1>Pyramid Drinking Game</h1>
-        <div id="game-controls">
-            <div id="current-turn">Setting Up...</div>
-            <div id="phase-display">Phase: Setup</div>
-            <div id="timer-display" style="display:none;">Time: <span id="countdown">30</span>s</div>
-            <div id="current-card-display" style="display:none;">Card: <span id="current-card"></span></div>
-            <div class="phase-actions">
-                <button onclick="autoStart()" id="auto-start-btn" style="display:none;">Deal Cards</button>
-                <button onclick="startMemorizePhase()" id="memorize-btn" style="display:none;">Start Memorizing</button>
-                <button onclick="nextPyramidCard()" id="pyramid-btn" style="display:none;">Flip Next Card</button>
-            </div>
-            <!-- This is the permanent home for the bluff prompt -->
-            <div id="prove-card-prompt" class="prove-prompt" style="display: none;"></div>
-        </div>
-        <div id="table"></div>
-        <div id="connection-status" class="connection-status disconnected">...</div>
-    </div>
-
-    <div id="target-modal" class="modal">
-        <div class="modal-content">
-            <h3 id="target-message">Who drinks?</h3>
-            <div id="target-buttons" class="modal-buttons"></div>
-        </div>
-    </div>
-
-    <div id="bluff-modal" class="modal">
-        <div class="modal-content">
-            <h3 id="bluff-message">Player X wants you to drink!</h3>
-            <p>Do you believe them?</p>
-            <div class="modal-buttons">
-                <button class="accept-btn" onclick="acceptDrink()">Take Drink</button>
-                <button class="challenge-btn" onclick="callBluff()">Call Bluff!</button>
-            </div>
-        </div>
-    </div>
-
+    <div id="menu-screen" class="screen active"><h1>Pyramid Card Game</h1><button onclick="showHostScreen()">Host New Game</button><button onclick="showJoinScreen()">Join Game</button></div>
+    <div id="host-screen" class="screen"><h1>Host New Game</h1><label>Your Name:</label><input type="text" id="host-name" value="Host"><button onclick="hostGame()" id="host-btn">Create Game</button><button onclick="showMenuScreen()">Back</button><div id="host-info" style="display:none;"><div class="connection-info"><h3>Game Created!</h3><p>Share this code:</p><div class="game-code" id="host-game-code">...</div></div><div class="players-list"><h4>Players in Game:</h4><div id="host-players-list"></div></div><button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game</button></div></div>
+    <div id="join-screen" class="screen"><h1>Join Game</h1><label>Your Name:</label><input type="text" id="join-name" value="Player"><label>Game Code:</label><input type="text" id="game-code-input" style="text-transform:uppercase;"><button onclick="joinGame()" id="join-btn">Join</button><button onclick="showMenuScreen()">Back</button><div id="join-info" style="display:none;"><div class="connection-info"><h3>Joined Game!</h3><p>Waiting for host...</p></div><div class="players-list"><h4>Players in Game:</h4><div id="join-players-list"></div></div></div></div>
+    <div id="game-screen" class="screen"><h1>Pyramid Drinking Game</h1><div id="game-controls"><div id="current-turn">Setting Up...</div><div id="phase-display">Phase: Setup</div><div id="timer-display" style="display:none;">Time: <span id="countdown">30</span>s</div><div id="current-card-display" style="display:none;">Card: <span id="current-card"></span></div><div class="phase-actions"><button onclick="autoStart()" id="auto-start-btn" style="display:none;">Deal Cards</button><button onclick="startMemorizePhase()" id="memorize-btn" style="display:none;">Start Memorizing</button><button onclick="nextPyramidCard()" id="pyramid-btn" style="display:none;">Flip Next Card</button><button onclick="startRecall()" id="recall-btn" style="display:none;">Start Recall Phase</button></div><div id="prove-card-prompt" class="prove-prompt" style="display: none;"></div></div><div id="table"></div><div id="connection-status" class="connection-status disconnected">...</div></div>
+    <div id="target-modal" class="modal"><div class="modal-content"><h3 id="target-message">Who drinks?</h3><div id="target-buttons" class="modal-buttons"></div></div></div>
+    <div id="bluff-modal" class="modal"><div class="modal-content"><h3 id="bluff-message">...</h3><p>Do you believe them?</p><div class="modal-buttons"><button class="accept-btn" onclick="acceptDrink()">Take Drink</button><button class="challenge-btn" onclick="callBluff()">Call Bluff!</button></div></div></div>
     <div id="game-message" class="game-message"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script>
         let socket = null, gameCode = null, playerId = null, isHost = false, gameState = {}, connectedPlayers = {};
-        let players = [], playerHands = {}, playerNames = [], myPlayerId = null, currentChallenger = null, currentTarget = null;
+        let players = [], playerHands = {}, playerNames = [], myPlayerId = null;
 
         function initSocket() {
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -177,36 +91,18 @@
             socket.on('cardRecallResult', (data) => handleCardRecallResult(data));
             socket.on('challengeResult', (data) => { showGameMessage(data.message, 4000); if (data.reveal) flipPlayerCard(data.reveal.playerId, data.reveal.cardValue); });
             socket.on('proveYourCard', (data) => showCardFlipModal(data.cardValue));
+            socket.on('beginRecallTurn', (data) => showCardRecallInput(data.playerIndex));
         }
 
         function showMenuScreen() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('menu-screen').classList.add('active'); }
         function showHostScreen() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('host-screen').classList.add('active'); }
         function showJoinScreen() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('join-screen').classList.add('active'); }
 
-        function hostGame() {
-            const hostName = document.getElementById('host-name').value.trim() || 'Host';
-            if (!socket || !socket.connected) return showGameMessage('Connecting...');
-            socket.emit('hostGame', { playerName: hostName });
-            document.getElementById('host-btn').disabled = true;
-        }
-        function joinGame() {
-            const playerName = document.getElementById('join-name').value.trim() || 'Player';
-            const code = document.getElementById('game-code-input').value.trim().toUpperCase();
-            if (!code) return showGameMessage('Please enter a game code');
-            if (!socket || !socket.connected) return showGameMessage('Connecting...');
-            socket.emit('joinGame', { gameCode: code, playerName: playerName });
-            document.getElementById('join-btn').disabled = true;
-        }
-        function startHostedGame() {
-            if (Object.keys(connectedPlayers).length < 3) return showGameMessage('Need at least 3 players');
-            socket.emit('startGame', { gameCode });
-        }
+        function hostGame() { const hostName = document.getElementById('host-name').value.trim() || 'Host'; if (!socket || !socket.connected) return showGameMessage('Connecting...'); socket.emit('hostGame', { playerName: hostName }); document.getElementById('host-btn').disabled = true; }
+        function joinGame() { const playerName = document.getElementById('join-name').value.trim() || 'Player'; const code = document.getElementById('game-code-input').value.trim().toUpperCase(); if (!code) return showGameMessage('Please enter a game code'); if (!socket || !socket.connected) return showGameMessage('Connecting...'); socket.emit('joinGame', { gameCode: code, playerName: playerName }); document.getElementById('join-btn').disabled = true; }
+        function startHostedGame() { if (Object.keys(connectedPlayers).length < 3) return showGameMessage('Need at least 3 players'); socket.emit('startGame', { gameCode }); }
 
-        function updateConnectionStatus(connected) {
-            const status = document.getElementById('connection-status');
-            status.textContent = connected ? 'Connected' : 'Disconnected';
-            status.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
-        }
+        function updateConnectionStatus(connected) { const status = document.getElementById('connection-status'); status.textContent = connected ? 'Connected' : 'Disconnected'; status.className = `connection-status ${connected ? 'connected' : 'disconnected'}`; }
 
         function updatePlayersList(serverPlayers) {
             connectedPlayers = serverPlayers;
@@ -232,12 +128,7 @@
             });
         }
 
-        function startMultiplayerGame() {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('game-screen').classList.add('active');
-            myPlayerId = playerId;
-            updateGameFromState();
-        }
+        function startMultiplayerGame() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('game-screen').classList.add('active'); myPlayerId = playerId; updateGameFromState(); }
 
         function setupGameTable() {
             const table = document.getElementById('table');
@@ -263,25 +154,16 @@
         function autoStart() { if (isHost) socket.emit('gameAction', { gameCode, action: 'autoStart' }); }
         function startMemorizePhase() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startMemorize' }); }
         function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
+        function startRecall() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startRecall' }); }
 
         function showCardFlipModal(requiredCardValue) {
             const prompt = document.getElementById('prove-card-prompt');
             prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click the card or <button>admit bluff</button>.`;
             prompt.style.display = 'block';
 
-            const cleanup = () => {
-                prompt.style.display = 'none';
-                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => {
-                    c.style.border = '';
-                    c.style.cursor = 'default';
-                    c.onclick = null;
-                });
-            };
+            const cleanup = () => { prompt.style.display = 'none'; document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => { c.style.border = ''; c.style.cursor = 'default'; c.onclick = null; }); };
 
-            prompt.querySelector('button').onclick = () => {
-                cleanup();
-                socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false });
-            };
+            prompt.querySelector('button').onclick = () => { cleanup(); socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false }); };
             
             const myCardElements = document.querySelectorAll(`#${myPlayerId} .card`);
             const myHandData = playerHands[myPlayerId] || [];
@@ -289,11 +171,9 @@
             myCardElements.forEach((cardEl, i) => {
                 if (myHandData[i]?.value === requiredCardValue) {
                     cardEl.style.cursor = 'pointer';
-                    cardEl.style.border = '3px solid #f1c40f';
-                    cardEl.onclick = () => {
-                        cleanup();
-                        socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: true });
-                    };
+                    // *** FIX 1: Removed the highlight border ***
+                    // cardEl.style.border = '3px solid #f1c40f'; 
+                    cardEl.onclick = () => { cleanup(); socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: true }); };
                 }
             });
         }
@@ -303,14 +183,14 @@
             const pHand = playerHands[pId] || [];
             for (let i = 0; i < pHand.length; i++) {
                 if (pHand[i].value === cardValue && !pCards[i].classList.contains('flipped')) {
-                    pCards[i].classList.add('flipped');
+                    // *** FIX 2: Added timeout to ensure animation runs ***
+                    setTimeout(() => pCards[i].classList.add('flipped'), 10);
                     break;
                 }
             }
         }
 
         function showCardRecallInput(playerIndex) {
-            if (playerIndex >= players.length) return;
             if (players[playerIndex] === myPlayerId) {
                 const modal = document.createElement('div');
                 modal.className = 'modal';
@@ -321,20 +201,15 @@
                 input.focus();
                 modal.querySelector('.challenge-btn').onclick = () => {
                     if (!input.value.trim()) return showGameMessage('Please enter cards');
-                    socket.emit('verifyCardRecall', { gameCode, playerId, playerIndex, recalledCards: input.value });
+                    socket.emit('verifyCardRecall', { gameCode, playerId, recalledCards: input.value });
                     modal.remove();
                 };
             } else {
-                showGameMessage(`${playerNames[playerIndex]} is reciting...`);
+                showGameMessage(`${playerNames[playerIndex]} is reciting their cards...`);
             }
         }
 
-        function handleCardRecallResult(data) {
-            showGameMessage(data.correct ? `${data.playerName} was correct!` : `${data.playerName} was wrong! Penalty! 🍺`, 2500);
-            if (data.nextPlayerIndex < players.length) {
-                setTimeout(() => showCardRecallInput(data.nextPlayerIndex), 2800);
-            }
-        }
+        function handleCardRecallResult(data) { showGameMessage(data.correct ? `${data.playerName} was correct!` : `${data.playerName} was wrong! Penalty! 🍺`, 2500); }
         
         function makeSomeoneDrink() {
             if (!gameState.currentPyramidCard) return showGameMessage("Wait for a card!");
@@ -348,17 +223,13 @@
                 btn.onclick = () => { socket.emit('challenge', { gameCode, challengerId: myPlayerId, targetId }); modal.style.display = 'none'; };
                 buttons.appendChild(btn);
             });
-            const cancelBtn = document.createElement('button');
-            cancelBtn.className = 'cancel-btn';
-            cancelBtn.textContent = 'Cancel';
-            cancelBtn.onclick = () => modal.style.display = 'none';
+            const cancelBtn = document.createElement('button'); cancelBtn.className = 'cancel-btn'; cancelBtn.textContent = 'Cancel'; cancelBtn.onclick = () => modal.style.display = 'none';
             buttons.appendChild(cancelBtn);
             modal.style.display = 'flex';
         }
 
         function receiveChallenge(data) {
             if (data.targetId === myPlayerId) {
-                currentChallenger = data.challengerId; currentTarget = data.targetId;
                 document.getElementById('bluff-message').textContent = `${playerNames[players.indexOf(data.challengerId)]} says you drink!`;
                 document.getElementById('bluff-modal').style.display = 'flex';
             }
@@ -388,7 +259,6 @@
             cards.forEach(card => container.appendChild(createCardElement(card)));
         }
 
-        // *** FIX 3: Restored the .card-inner div to fix the flip animation ***
         function createCardElement(card) {
             const el = document.createElement('div');
             el.className = 'card';
@@ -397,34 +267,51 @@
             return el;
         }
 
-        function updatePyramidFromState(pyramid) {
+        function updatePyramidFromState(pyramidData) {
             const container = document.getElementById('pyramid');
-            container.innerHTML = '';
-            let cardIndex = 0;
-            for (let rows = 1; cardIndex < pyramid.length; rows++) {
-                const rowEl = document.createElement('div');
-                rowEl.className = 'row';
-                for (let i = 0; i < rows && cardIndex < pyramid.length; i++, cardIndex++) {
-                    const card = createCardElement(pyramid[cardIndex]);
-                    if (pyramid[cardIndex].revealed) card.classList.add('flipped');
-                    rowEl.appendChild(card);
+            if (!container.hasChildNodes()) { // If empty, build it from scratch
+                let cardIndex = 0;
+                for (let rows = 1; cardIndex < pyramidData.length; rows++) {
+                    const rowEl = document.createElement('div');
+                    rowEl.className = 'row';
+                    for (let i = 0; i < rows && cardIndex < pyramidData.length; i++, cardIndex++) {
+                        const card = createCardElement(pyramidData[cardIndex]);
+                        if (pyramidData[cardIndex].revealed) card.classList.add('flipped');
+                        rowEl.appendChild(card);
+                    }
+                    container.appendChild(rowEl);
                 }
-                container.appendChild(rowEl);
+            } else { // If already built, just flip the correct card
+                pyramidData.forEach((cardData, index) => {
+                    if (cardData.revealed) {
+                        const cardEl = container.querySelectorAll('.card')[index];
+                        if (cardEl && !cardEl.classList.contains('flipped')) {
+                             // *** FIX 2: Added timeout to ensure animation runs ***
+                            setTimeout(() => cardEl.classList.add('flipped'), 10);
+                        }
+                    }
+                });
             }
         }
         
         function updateGameStatus(phase) {
-            const ctrls = { p: document.getElementById('phase-display'), t: document.getElementById('current-turn'), tm: document.getElementById('timer-display'), cd: document.getElementById('current-card-display') };
-            const btns = { auto: document.getElementById('auto-start-btn'), mem: document.getElementById('memorize-btn'), pyr: document.getElementById('pyramid-btn') };
+            const ctrls = { p: document.getElementById('phase-display'), t: document.getElementById('current-turn') };
+            const btns = { auto: document.getElementById('auto-start-btn'), mem: document.getElementById('memorize-btn'), pyr: document.getElementById('pyramid-btn'), rec: document.getElementById('recall-btn') };
             Object.values(btns).forEach(b => b.style.display = 'none');
             if (document.getElementById('restart-btn')) document.getElementById('restart-btn').remove();
+
+            const allPyramidCardsFlipped = gameState.pyramidCards && gameState.pyramidCards.every(c => c.revealed);
 
             switch (phase) {
                 case 'setup': ctrls.p.textContent = 'Phase: Ready'; ctrls.t.textContent = 'Ready to Start!'; if (isHost) btns.auto.style.display = 'block'; break;
                 case 'dealt': ctrls.p.textContent = 'Phase: Memorize'; ctrls.t.textContent = 'Cards Dealt!'; if (isHost) btns.mem.style.display = 'block'; break;
-                case 'memorize': ctrls.p.textContent = 'Phase: MEMORIZE!'; ctrls.t.textContent = 'Memorize!'; ctrls.tm.style.display = 'block'; startLocalMemorizePhase(); break;
-                case 'pyramid': ctrls.p.textContent = 'Phase: Pyramid'; ctrls.t.textContent = 'Pyramid'; ctrls.tm.style.display = 'none'; ctrls.cd.style.display = 'block'; if (isHost) btns.pyr.style.display = 'block'; break;
-                case 'recall': ctrls.p.textContent = 'Phase: Recall'; ctrls.t.textContent = 'Recall Cards!'; showCardRecallInput(0); break;
+                case 'memorize': ctrls.p.textContent = 'Phase: MEMORIZE!'; ctrls.t.textContent = 'Memorize!'; startLocalMemorizePhase(); break;
+                case 'pyramid':
+                    ctrls.p.textContent = 'Phase: Pyramid'; ctrls.t.textContent = 'Pyramid';
+                    if (isHost && !allPyramidCardsFlipped) btns.pyr.style.display = 'block';
+                    if (isHost && allPyramidCardsFlipped) btns.rec.style.display = 'block';
+                    break;
+                case 'recall': ctrls.p.textContent = 'Phase: Recall'; ctrls.t.textContent = 'Recall Cards!'; break;
                 case 'finished':
                     ctrls.p.textContent = 'Phase: Game Over'; ctrls.t.textContent = 'Game Finished!';
                     if (isHost) {
