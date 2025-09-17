@@ -62,8 +62,13 @@
         .connection-status { position: fixed; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.9); color: white; padding: 10px; border-radius: 6px; font-size: 0.9rem; }
         .connection-status.connected { border: 2px solid #27ae60; }
         .connection-status.disconnected { border: 2px solid #e74c3c; }
-        
-        /* *** FIX 1: Style for the new, non-blocking proof prompt *** */
+
+        /* *** FIX 3: Corrected button styles and added the new prompt style *** */
+        .action-btn {
+            padding: 3px 6px;
+            font-size: 0.65rem;
+            margin: 2px; /* Overrides the large default margin */
+        }
         .prove-prompt {
             margin-top: 15px;
             padding: 10px;
@@ -83,14 +88,12 @@
 </head>
 
 <body>
-
     <div id="menu-screen" class="screen active">
         <h1>🃏 Pyramid Card Game</h1>
         <h2>Choose Game Mode</h2>
         <button onclick="showHostScreen()">Host New Game</button>
         <button onclick="showJoinScreen()">Join Game</button>
     </div>
-
     <div id="host-screen" class="screen">
         <h1>🃏 Host New Game</h1>
         <label for="host-name">Your Name:</label>
@@ -110,7 +113,6 @@
             <button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game</button>
         </div>
     </div>
-
     <div id="join-screen" class="screen">
         <h1>🃏 Join Game</h1>
         <label for="join-name">Your Name:</label>
@@ -130,7 +132,6 @@
             </div>
         </div>
     </div>
-
     <div id="game-screen" class="screen">
         <h1>Pyramid Drinking Game</h1>
         <div id="game-controls">
@@ -147,14 +148,12 @@
         <div id="table"></div>
         <div id="connection-status" class="connection-status disconnected">...</div>
     </div>
-
     <div id="target-modal" class="modal">
         <div class="modal-content">
             <h3 id="target-message">Who drinks?</h3>
             <div id="target-buttons" class="modal-buttons"></div>
         </div>
     </div>
-
     <div id="bluff-modal" class="modal">
         <div class="modal-content">
             <h3 id="bluff-message">Player X wants you to drink!</h3>
@@ -165,7 +164,6 @@
             </div>
         </div>
     </div>
-
     <div id="game-message" class="game-message"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
@@ -265,9 +263,7 @@
                 const el = document.createElement('div');
                 el.className = 'player';
                 el.id = pId;
-                el.style.left = `${x}px`;
-                el.style.top = `${y}px`;
-                el.style.transform = 'translate(-50%, -50%)';
+                el.style.left = `${x}px`; el.style.top = `${y}px`; el.style.transform = 'translate(-50%, -50%)';
                 if (pId === myPlayerId) el.classList.add('current-user');
                 if (connectedPlayers[pId]?.isHost) el.classList.add('is-host');
                 el.innerHTML = `<div class="player-header"><div class="player-name">${playerNames[i]}</div><div class="drink-counter" id="drinks-${pId}">Drinks: 0</div></div><div class="player-cards" id="cards-${pId}"></div><div class="player-actions" id="actions-${pId}" style="display:none;"></div>`;
@@ -280,7 +276,6 @@
         function startMemorizePhase() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startMemorize' }); }
         function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
 
-        // *** FIX 1: This function no longer uses a blocking modal ***
         function showCardFlipModal(requiredCardValue) {
             const existingPrompt = document.getElementById('prove-card-prompt');
             if (existingPrompt) existingPrompt.remove();
@@ -293,21 +288,17 @@
 
             const cleanup = () => {
                 prompt.remove();
-                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => {
-                    c.style.border = '';
-                    c.style.cursor = 'default';
-                    c.onclick = null;
-                });
+                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => { c.style.border = ''; c.style.cursor = 'default'; c.onclick = null; });
             };
 
             prompt.querySelector('button').onclick = () => {
                 cleanup();
                 socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false });
             };
-
+            
             const myCardElements = document.querySelectorAll(`#${myPlayerId} .card`);
             const myHandData = playerHands[myPlayerId] || [];
-
+            
             myCardElements.forEach((cardEl, i) => {
                 if (myHandData[i]?.value === requiredCardValue) {
                     cardEl.style.cursor = 'pointer';
@@ -355,7 +346,7 @@
             showGameMessage(data.correct ? `${data.playerName} was correct!` : `${data.playerName} was wrong! Penalty! 🍺`, 2500);
             setTimeout(() => showCardRecallInput(data.nextPlayerIndex), 2800);
         }
-
+        
         function makeSomeoneDrink() {
             if (!gameState.currentPyramidCard) return showGameMessage("Wait for a card!");
             const modal = document.getElementById('target-modal');
@@ -383,7 +374,7 @@
                 document.getElementById('bluff-modal').style.display = 'flex';
             }
         }
-
+        
         function acceptDrink() { document.getElementById('bluff-modal').style.display = 'none'; socket.emit('challengeResponse', { gameCode, response: 'accept' }); }
         function callBluff() { document.getElementById('bluff-modal').style.display = 'none'; socket.emit('challengeResponse', { gameCode, response: 'challenge' }); }
 
@@ -431,7 +422,7 @@
                 container.appendChild(rowEl);
             }
         }
-
+        
         function updateGameStatus(phase) {
             const ctrls = { p: document.getElementById('phase-display'), t: document.getElementById('current-turn'), tm: document.getElementById('timer-display'), cd: document.getElementById('current-card-display') };
             const btns = { auto: document.getElementById('auto-start-btn'), mem: document.getElementById('memorize-btn'), pyr: document.getElementById('pyramid-btn') };
@@ -455,12 +446,18 @@
             }
         }
 
+        // *** FIX 2: This function now flips ALL player cards, not just the local one ***
         function startLocalMemorizePhase() {
-            let timeLeft = 30; document.getElementById('countdown').textContent = timeLeft;
-            document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => c.classList.add('flipped'));
+            let timeLeft = 30;
+            document.getElementById('countdown').textContent = timeLeft;
+            document.querySelectorAll('.player .card').forEach(c => c.classList.add('flipped'));
             const timer = setInterval(() => {
-                timeLeft--; document.getElementById('countdown').textContent = timeLeft;
-                if (timeLeft <= 0) { clearInterval(timer); document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => c.classList.remove('flipped')); }
+                timeLeft--;
+                document.getElementById('countdown').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    document.querySelectorAll('.player .card').forEach(c => c.classList.remove('flipped'));
+                }
             }, 1000);
         }
 
@@ -471,7 +468,7 @@
                 if (show) actions.innerHTML = `<button class="action-btn target-btn" onclick="makeSomeoneDrink()">Make Drink</button>`;
             }
         }
-
+        
         window.addEventListener('load', initSocket);
     </script>
 </body>
