@@ -557,6 +557,10 @@ io.on('connection', (socket) => {
       socket.emit('error', { message: 'Failed to verify card recall' });
     }
   });
+  
+  // *** CORRECTED SECTION STARTS HERE ***
+  // The disconnect logic is now properly wrapped in its own event handler
+  socket.on('disconnect', () => {
     console.log(`Player disconnected: ${socket.id}`);
     
     // Find and update games
@@ -593,6 +597,7 @@ io.on('connection', (socket) => {
       }
     }
   });
+  // *** CORRECTED SECTION ENDS HERE ***
 });
 
 const PORT = process.env.PORT || 3000;
