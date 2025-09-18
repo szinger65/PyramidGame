@@ -56,10 +56,7 @@ function buildPyramid(game) {
   game.pyramidCards = [];
   for (let row = 1; row <= rows; row++) {
     for (let i = 0; i < row; i++) {
-      if (game.deck.length > 0) {
-        const card = game.deck.pop();
-        game.pyramidCards.push({ ...card, revealed: false });
-      }
+      if (game.deck.length > 0) { const card = game.deck.pop(); game.pyramidCards.push({ ...card, revealed: false }); }
     }
   }
 }
@@ -153,7 +150,6 @@ io.on('connection', (socket) => {
   socket.on('challengeResponse', (data) => {
     const game = games.get(data.gameCode);
     if (!game || !game.activeBluff) return;
-
     const { challengerId, targetId } = game.activeBluff;
     const challengerName = game.players[challengerId]?.name;
     const targetName = game.players[targetId]?.name;
@@ -171,6 +167,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // *** THE FIX IS HERE: Logic updated for 'admit bluff' feedback ***
   socket.on('proveCard', (data) => {
     const game = games.get(data.gameCode);
     if (!game || !game.activeBluff) return;
@@ -179,16 +176,18 @@ io.on('connection', (socket) => {
     const challengerName = game.players[challengerId]?.name;
     const targetName = game.players[targetId]?.name;
 
-    // *** FIX 3: Check data.proved flag for drink counting ***
     if (data.proved) {
-        // Successful proof (whether they had the card or not, they proved something)
+      // This is hit when the user clicks a card (correct or incorrect)
+      const hasCard = game.playerHands[challengerId].some(c => c.value === data.cardValue);
+      if(hasCard) {
         game.drinkCounts[targetId] += 2;
-        broadcastToGame(data.gameCode, 'challengeResult', { 
-            message: `${challengerName} proved it! ${targetName} drinks twice! 🍺🍺`, 
-            reveal: { playerId: challengerId, cardValue: data.cardValue } 
-        });
+        broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} had the card! ${targetName} drinks twice! 🍺🍺` });
+      } else {
+        game.drinkCounts[challengerId]++;
+        broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} clicked the wrong card! They drink! 🍺` });
+      }
     } else {
-      // Admit bluff (data.proved == false)
+      // This is hit when the user clicks "admit bluff"
       game.drinkCounts[challengerId]++;
       broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} admitted bluffing! They drink! 🍺` });
     }
