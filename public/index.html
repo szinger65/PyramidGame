@@ -33,22 +33,8 @@
         .card { width: 35px; height: 50px; perspective: 600px; cursor: default; }
         .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
         .card.flipped .card-inner { transform: rotateY(180deg); }
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 4px;
-            border: 1px solid #aaa;
-            background-color: white;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        /* *** VISUAL UPGRADE: New Card Back Image *** */
-        .card-back {
-            background-image: url('https://deckofcardsapi.com/static/img/back.png');
-        }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; border: 1px solid #aaa; background-color: white; background-size: contain; background-repeat: no-repeat; background-position: center; }
+        .card-back { background-image: url('https://deckofcardsapi.com/static/img/back.png'); }
         .card-front { transform: rotateY(180deg); }
         .pyramid .card { width: 40px; height: 58px; }
         #game-controls { position: fixed; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.9); color: white; padding: 15px; border-radius: 8px; font-size: 0.9rem; max-width: 250px; }
@@ -171,9 +157,10 @@
         function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
         function startRecall() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startRecall' }); }
 
+        // *** FIX 2: Corrected logic for card clicking and sending proof ***
         function showCardFlipModal(requiredCardValue) {
             const prompt = document.getElementById('prove-card-prompt');
-            prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click one of your cards or <button>admit bluff</button>.`;
+            prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click a card or <button>admit bluff</button>.`;
             prompt.style.display = 'block';
 
             const cleanup = () => {
@@ -195,10 +182,8 @@
                 cardEl.onclick = () => {
                     const cardValueInHand = playerHands[myPlayerId][i].value;
                     const proved = (cardValueInHand === requiredCardValue);
-
                     cleanup();
                     cardEl.classList.add('flipped');
-                    
                     setTimeout(() => {
                         socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: proved });
                     }, 700);
@@ -285,25 +270,23 @@
             container.innerHTML = '';
             cards.forEach(card => container.appendChild(createCardElement(card)));
         }
-        
-        // *** VISUAL UPGRADE: This function now builds cards with image backgrounds ***
+
         function createCardElement(card) {
             const el = document.createElement('div');
             el.className = 'card';
-
             const cardFront = document.createElement('div');
             cardFront.className = 'card-front';
-
-            // Map server values to image filenames
             const valueMap = { 'A': 'A', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '10': '0', 'J': 'J', 'Q': 'Q', 'K': 'K' };
             const suitMap = { '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C' };
             const cardCode = `${valueMap[card.value]}${suitMap[card.suit]}`;
             cardFront.style.backgroundImage = `url('https://deckofcardsapi.com/static/img/${cardCode}.png')`;
-
-            el.innerHTML = `<div class="card-inner"></div>`;
-            el.querySelector('.card-inner').appendChild(cardFront);
-            el.querySelector('.card-inner').appendChild(document.createElement('div')).className = 'card-back';
-            
+            const cardInner = document.createElement('div');
+            cardInner.className = 'card-inner';
+            cardInner.appendChild(cardFront);
+            const cardBack = document.createElement('div');
+            cardBack.className = 'card-back';
+            cardInner.appendChild(cardBack);
+            el.appendChild(cardInner);
             return el;
         }
 
