@@ -30,14 +30,10 @@
         #menu-screen, #host-screen, #join-screen {
             padding-top: 50px;
             justify-content: flex-start;
-        }
-        
-        /* *** THE FIX IS HERE: Ensures the lobby can scroll properly *** */
-        #host-screen, #join-screen {
             overflow-y: auto;
-            max-height: 100vh; /* Allow it to take up the full screen height */
-            box-sizing: border-box; /* Include padding in height calculation */
-            padding-bottom: 50px; /* Add space at the bottom */
+            max-height: 100vh;
+            box-sizing: border-box;
+            padding-bottom: 50px;
         }
 
         .active {
@@ -91,7 +87,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-top: 50px;
         }
 
         #table {
@@ -102,6 +97,11 @@
             border-radius: 50%;
             border: 20px solid #5C4033;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), inset 0 0 25px rgba(0, 0, 0, 0.7);
+            
+            /* *** THE FIX IS HERE: Moves the table up by 15px *** */
+            top: calc(50% - 15px);
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .pyramid { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
@@ -295,7 +295,7 @@
             const container = document.getElementById('table-container');
             container.innerHTML = `<div id="table"><div id="pyramid" class="pyramid"></div></div>`;
             
-            const radius = 350;
+            const radius = 350; 
             const centerX = container.offsetWidth / 2;
             const centerY = container.offsetHeight / 2;
             const angleStep = 360 / players.length;
