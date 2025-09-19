@@ -6,7 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pyramid Card Game - Multiplayer</title>
     <style>
-        body { background-color: #1a1a1a; font-family: Arial, sans-serif; color: white; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        body {
+            background-color: #1a1a1a;
+            font-family: Arial, sans-serif;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 600px; }
         .active { display: flex; }
         select, button, input[type="text"] { font-size: 1rem; padding: 10px; margin: 10px; border-radius: 6px; border: none; }
@@ -20,10 +29,22 @@
         .player-item.is-host { border: 2px solid #f1c40f; }
         .player-item.is-you { border: 2px solid #3498db; }
         .status-indicator { width: 12px; height: 12px; border-radius: 50%; background-color: #27ae60; }
-        #table { position: relative; width: 400px; height: 400px; margin: 100px auto 0; border-radius: 50%; background: #228B22; }
+        
+        /* New Poker Table Style */
+        #table {
+            position: relative;
+            width: 550px;
+            height: 350px;
+            margin: 60px auto 0;
+            background: #006400; /* Dark green felt */
+            border-radius: 175px; /* Creates the oval shape */
+            border: 20px solid #5C4033; /* Dark "wooden" rail */
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4), inset 0 0 15px rgba(0,0,0,0.6);
+        }
+
         .pyramid { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         .row { display: flex; justify-content: center; margin: 4px 0; }
-        .player { position: absolute; display: flex; flex-direction: column; gap: 2px; background-color: rgba(255, 255, 255, 0.1); border: 1px dashed white; width: 140px; padding: 8px; justify-content: center; align-items: center; color: white; font-size: 0.8rem; border-radius: 8px; }
+        .player { position: absolute; display: flex; flex-direction: column; gap: 2px; background-color: rgba(0, 0, 0, 0.4); border: 1px dashed white; width: 140px; padding: 8px; justify-content: center; align-items: center; color: white; font-size: 0.8rem; border-radius: 8px; }
         .player.current-user { background-color: rgba(52, 152, 219, 0.3); border: 2px solid #3498db; }
         .player.is-host { border-color: #f1c40f; }
         .player-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 5px; }
@@ -60,12 +81,86 @@
 </head>
 
 <body>
-    <div id="menu-screen" class="screen active"><h1>Pyramid Card Game</h1><button onclick="showHostScreen()">Host New Game</button><button onclick="showJoinScreen()">Join Game</button></div>
-    <div id="host-screen" class="screen"><h1>Host New Game</h1><label>Your Name:</label><input type="text" id="host-name" value="Host"><button onclick="hostGame()" id="host-btn">Create Game</button><button onclick="showMenuScreen()">Back</button><div id="host-info" style="display:none;"><div class="connection-info"><h3>Game Created!</h3><p>Share this code:</p><div class="game-code" id="host-game-code">...</div></div><div class="players-list"><h4>Players in Game:</h4><div id="host-players-list"></div></div><button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game</button></div></div>
-    <div id="join-screen" class="screen"><h1>Join Game</h1><label>Your Name:</label><input type="text" id="join-name" value="Player"><label>Game Code:</label><input type="text" id="game-code-input" style="text-transform:uppercase;"><button onclick="joinGame()" id="join-btn">Join</button><button onclick="showMenuScreen()">Back</button><div id="join-info" style="display:none;"><div class="connection-info"><h3>Joined Game!</h3><p>Waiting for host...</p></div><div class="players-list"><h4>Players in Game:</h4><div id="join-players-list"></div></div></div></div>
-    <div id="game-screen" class="screen"><h1>Pyramid Drinking Game</h1><div id="game-controls"><div id="current-turn">Setting Up...</div><div id="phase-display">Phase: Setup</div><div id="timer-display">Time: <span id="countdown">30</span>s</div><div id="current-card-display" style="display:none;">Card: <span id="current-card"></span></div><div class="phase-actions"><button onclick="autoStart()" id="auto-start-btn" style="display:none;">Deal Cards</button><button onclick="startMemorizePhase()" id="memorize-btn" style="display:none;">Start Memorizing</button><button onclick="nextPyramidCard()" id="pyramid-btn" style="display:none;">Flip Next Card</button><button onclick="startRecall()" id="recall-btn" style="display:none;">Start Recall Phase</button></div><div id="prove-card-prompt" class="prove-prompt" style="display: none;"></div></div><div id="table"></div><div id="connection-status" class="connection-status disconnected">...</div></div>
-    <div id="target-modal" class="modal"><div class="modal-content"><h3 id="target-message">Who drinks?</h3><div id="target-buttons" class="modal-buttons"></div></div></div>
-    <div id="bluff-modal" class="modal"><div class="modal-content"><h3 id="bluff-message">...</h3><p>Do you believe them?</p><div class="modal-buttons"><button class="accept-btn" onclick="acceptDrink()">Take Drink</button><button class="challenge-btn" onclick="callBluff()">Call Bluff!</button></div></div></div>
+    <div id="menu-screen" class="screen active">
+        <h1>Pyramid Card Game</h1>
+        <button onclick="showHostScreen()">Host New Game</button>
+        <button onclick="showJoinScreen()">Join Game</button>
+    </div>
+
+    <div id="host-screen" class="screen">
+        <h1>Host New Game</h1>
+        <label>Your Name:</label><input type="text" id="host-name" value="Host">
+        <button onclick="hostGame()" id="host-btn">Create Game</button>
+        <button onclick="showMenuScreen()">Back</button>
+        <div id="host-info" style="display:none;">
+            <div class="connection-info">
+                <h3>Game Created!</h3>
+                <p>Share this code:</p>
+                <div class="game-code" id="host-game-code">...</div>
+            </div>
+            <div class="players-list">
+                <h4>Players in Game:</h4>
+                <div id="host-players-list"></div>
+            </div>
+            <button onclick="startHostedGame()" id="start-game-btn" disabled>Start Game</button>
+        </div>
+    </div>
+
+    <div id="join-screen" class="screen">
+        <h1>Join Game</h1>
+        <label>Your Name:</label><input type="text" id="join-name" value="Player">
+        <label>Game Code:</label><input type="text" id="game-code-input" style="text-transform:uppercase;">
+        <button onclick="joinGame()" id="join-btn">Join</button>
+        <button onclick="showMenuScreen()">Back</button>
+        <div id="join-info" style="display:none;">
+            <div class="connection-info">
+                <h3>Joined Game!</h3>
+                <p>Waiting for host...</p>
+            </div>
+            <div class="players-list">
+                <h4>Players in Game:</h4>
+                <div id="join-players-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <!-- Title removed from here -->
+        <div id="game-controls">
+            <div id="current-turn">Setting Up...</div>
+            <div id="phase-display">Phase: Setup</div>
+            <div id="timer-display">Time: <span id="countdown">30</span>s</div>
+            <div id="current-card-display" style="display:none;">Card: <span id="current-card"></span></div>
+            <div class="phase-actions">
+                <button onclick="autoStart()" id="auto-start-btn" style="display:none;">Deal Cards</button>
+                <button onclick="startMemorizePhase()" id="memorize-btn" style="display:none;">Start Memorizing</button>
+                <button onclick="nextPyramidCard()" id="pyramid-btn" style="display:none;">Flip Next Card</button>
+                <button onclick="startRecall()" id="recall-btn" style="display:none;">Start Recall Phase</button>
+            </div>
+            <div id="prove-card-prompt" class="prove-prompt" style="display: none;"></div>
+        </div>
+        <div id="table"></div>
+        <div id="connection-status" class="connection-status disconnected">...</div>
+    </div>
+
+    <div id="target-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="target-message">Who drinks?</h3>
+            <div id="target-buttons" class="modal-buttons"></div>
+        </div>
+    </div>
+
+    <div id="bluff-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="bluff-message">...</h3>
+            <p>Do you believe them?</p>
+            <div class="modal-buttons">
+                <button class="accept-btn" onclick="acceptDrink()">Take Drink</button>
+                <button class="challenge-btn" onclick="callBluff()">Call Bluff!</button>
+            </div>
+        </div>
+    </div>
+
     <div id="game-message" class="game-message"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
@@ -134,12 +229,17 @@
         function setupGameTable() {
             const table = document.getElementById('table');
             table.innerHTML = '<div id="pyramid" class="pyramid"></div>';
-            const radius = 175, centerX = 175, centerY = 175;
+            
+            const radiusX = 205; // Horizontal radius for oval
+            const radiusY = 105; // Vertical radius for oval
+            const centerX = table.offsetWidth / 2;
+            const centerY = table.offsetHeight / 2;
             const angleStep = 360 / players.length;
+
             players.forEach((pId, i) => {
                 const angle = angleStep * i * Math.PI / 180 - Math.PI / 2;
-                const x = centerX + radius * Math.cos(angle);
-                const y = centerY + radius * Math.sin(angle);
+                const x = centerX + radiusX * Math.cos(angle);
+                const y = centerY + radiusY * Math.sin(angle);
                 const el = document.createElement('div');
                 el.className = 'player';
                 el.id = pId;
@@ -157,7 +257,6 @@
         function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
         function startRecall() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startRecall' }); }
 
-        // *** FIX 2: Corrected logic for card clicking and sending proof ***
         function showCardFlipModal(requiredCardValue) {
             const prompt = document.getElementById('prove-card-prompt');
             prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click a card or <button>admit bluff</button>.`;
@@ -182,8 +281,10 @@
                 cardEl.onclick = () => {
                     const cardValueInHand = playerHands[myPlayerId][i].value;
                     const proved = (cardValueInHand === requiredCardValue);
+
                     cleanup();
                     cardEl.classList.add('flipped');
+                    
                     setTimeout(() => {
                         socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: proved });
                     }, 700);
@@ -274,17 +375,20 @@
         function createCardElement(card) {
             const el = document.createElement('div');
             el.className = 'card';
+            const cardInner = document.createElement('div');
+            cardInner.className = 'card-inner';
+            
             const cardFront = document.createElement('div');
             cardFront.className = 'card-front';
             const valueMap = { 'A': 'A', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '10': '0', 'J': 'J', 'Q': 'Q', 'K': 'K' };
             const suitMap = { '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C' };
             const cardCode = `${valueMap[card.value]}${suitMap[card.suit]}`;
             cardFront.style.backgroundImage = `url('https://deckofcardsapi.com/static/img/${cardCode}.png')`;
-            const cardInner = document.createElement('div');
-            cardInner.className = 'card-inner';
-            cardInner.appendChild(cardFront);
+            
             const cardBack = document.createElement('div');
             cardBack.className = 'card-back';
+
+            cardInner.appendChild(cardFront);
             cardInner.appendChild(cardBack);
             el.appendChild(cardInner);
             return el;
@@ -380,4 +484,5 @@
         window.addEventListener('load', initSocket);
     </script>
 </body>
+
 </html>
