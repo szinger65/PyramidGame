@@ -31,6 +31,11 @@
             padding-top: 50px;
             justify-content: flex-start;
         }
+        
+        /* *** FIX 1: Allow lobby to scroll if player list is long *** */
+        #host-screen, #join-screen {
+            overflow-y: auto;
+        }
 
         .active {
             display: flex;
@@ -38,7 +43,9 @@
 
         #game-screen {
             max-width: none;
-            justify-content: center;
+            /* *** FIX 2: Lower the table by aligning items to the start *** */
+            justify-content: flex-start; 
+            align-items: center;
         }
 
         select,
@@ -78,11 +85,13 @@
         
         #table-container {
             position: relative;
-            width: 700px;
-            height: 700px;
+            width: 750px; /* Increased container to prevent player cutoff */
+            height: 750px;
             display: flex;
             justify-content: center;
             align-items: center;
+            /* *** FIX 2: Added margin to push table down *** */
+            margin-top: 50px; 
         }
 
         #table {
@@ -286,8 +295,8 @@
             const container = document.getElementById('table-container');
             container.innerHTML = `<div id="table"><div id="pyramid" class="pyramid"></div></div>`;
             
-            // *** THE FIX IS HERE: Adjusted radius for better positioning ***
-            const radius = 325; 
+            // *** THE FIX IS HERE: Increased radius to prevent overlap ***
+            const radius = 340; 
             const centerX = container.offsetWidth / 2;
             const centerY = container.offsetHeight / 2;
             const angleStep = 360 / players.length;
