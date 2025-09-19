@@ -167,7 +167,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // *** THE FIX IS HERE: Logic updated for 'admit bluff' feedback ***
   socket.on('proveCard', (data) => {
     const game = games.get(data.gameCode);
     if (!game || !game.activeBluff) return;
@@ -177,7 +176,6 @@ io.on('connection', (socket) => {
     const targetName = game.players[targetId]?.name;
 
     if (data.proved) {
-      // This is hit when the user clicks a card (correct or incorrect)
       const hasCard = game.playerHands[challengerId].some(c => c.value === data.cardValue);
       if(hasCard) {
         game.drinkCounts[targetId] += 2;
@@ -187,7 +185,6 @@ io.on('connection', (socket) => {
         broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} clicked the wrong card! They drink! 🍺` });
       }
     } else {
-      // This is hit when the user clicks "admit bluff"
       game.drinkCounts[challengerId]++;
       broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} admitted bluffing! They drink! 🍺` });
     }
@@ -204,7 +201,8 @@ io.on('connection', (socket) => {
     const recalledCardValues = parseRecalledCards(data.recalledCards).sort();
     const correct = arraysEqual(actualCardValues, recalledCardValues);
 
-    if (!correct) game.drinkCounts[playerId] = (game.drinkCounts[playerId] || 0) + 5;
+    // *** THE FIX IS HERE: Removed the automatic 5-drink penalty ***
+    // if (!correct) game.drinkCounts[playerId] = (game.drinkCounts[playerId] || 0) + 5;
 
     broadcastToGame(data.gameCode, 'cardRecallResult', { playerName: game.players[playerId]?.name, correct });
 
