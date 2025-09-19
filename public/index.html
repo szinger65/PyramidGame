@@ -82,19 +82,18 @@
         
         #table-container {
             position: relative;
-            width: 90vmin;
-            height: 90vmin;
-            max-width: 750px;
-            max-height: 750px;
+            width: 750px;
+            height: 750px;
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-top: 30px;
         }
 
         #table {
             position: absolute;
-            width: 60%;
-            height: 60%;
+            width: 450px;
+            height: 450px;
             background: #006400;
             border-radius: 50%;
             border: 20px solid #5C4033;
@@ -288,27 +287,51 @@
 
         function startMultiplayerGame() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('game-screen').classList.add('active'); myPlayerId = playerId; updateGameFromState(); }
 
-        // *** THE FIX IS HERE: Rewritten player positioning logic ***
+        // *** THE FIX IS HERE: Rewritten player positioning logic with custom layouts ***
         function setupGameTable() {
             const container = document.getElementById('table-container');
             container.innerHTML = `<div id="table"><div id="pyramid" class="pyramid"></div></div>`;
             
-            const radius = container.offsetWidth / 2 - 70; // Radius based on container size, minus player box width
-            const centerX = container.offsetWidth / 2;
-            const centerY = container.offsetHeight / 2;
-            const angleStep = 360 / players.length;
-            
-            // Offset the starting angle to avoid placing a player directly at the bottom
-            const angleOffset = (players.length === 4 || players.length === 6) ? angleStep / 2 : 0;
-            
+            let positions = [];
+            const playerCount = players.length;
+
+            // Define custom positions for each player count
+            switch (playerCount) {
+                case 3: // Triangle formation
+                    positions = [ { x: '50%', y: '5%' }, { x: '15%', y: '95%' }, { x: '85%', y: '95%' } ];
+                    break;
+                case 4: // Diamond formation
+                    positions = [ { x: '50%', y: '0%' }, { x: '100%', y: '50%' }, { x: '50%', y: '100%' }, { x: '0%', y: '50%' } ];
+                    break;
+                case 5: // House formation
+                    positions = [ { x: '50%', y: '0%' }, { x: '95%', y: '40%' }, { x: '80%', y: '95%' }, { x: '20%', y: '95%' }, { x: '5%', y: '40%' } ];
+                    break;
+                case 6: // Hexagon formation
+                    positions = [ { x: '50%', y: '0%' }, { x: '95%', y: '35%' }, { x: '95%', y: '65%' }, { x: '50%', y: '100%' }, { x: '5%', y: '65%' }, { x: '5%', y: '35%' } ];
+                    break;
+                case 7: // Three on top, four on bottom
+                    positions = [ { x: '50%', y: '0%' }, { x: '85%', y: '20%' }, { x: '100%', y: '60%' }, { x: '75%', y: '95%' }, { x: '25%', y: '95%' }, { x: '0%', y: '60%' }, { x: '15%', y: '20%' } ];
+                    break;
+                default: // Default circular layout for other cases
+                    const radius = container.offsetWidth / 2 - 70;
+                    const centerX = container.offsetWidth / 2;
+                    const centerY = container.offsetHeight / 2;
+                    const angleStep = 360 / playerCount;
+                    for (let i = 0; i < playerCount; i++) {
+                        const angle = (angleStep * i - 90) * Math.PI / 180;
+                        positions.push({ x: `${centerX + radius * Math.cos(angle)}px`, y: `${centerY + radius * Math.sin(angle)}px` });
+                    }
+                    break;
+            }
+
             players.forEach((pId, i) => {
-                const angle = (angleStep * i + angleOffset - 90) * Math.PI / 180; // Start from top
-                const x = centerX + radius * Math.cos(angle);
-                const y = centerY + radius * Math.sin(angle);
+                const pos = positions[i];
                 const el = document.createElement('div');
                 el.className = 'player';
                 el.id = pId;
-                el.style.left = `${x}px`; el.style.top = `${y}px`; el.style.transform = 'translate(-50%, -50%)';
+                el.style.left = pos.x;
+                el.style.top = pos.y;
+                el.style.transform = 'translate(-50%, -50%)';
                 if (pId === myPlayerId) el.classList.add('current-user');
                 if (connectedPlayers[pId]?.isHost) el.classList.add('is-host');
                 el.innerHTML = `<div class="player-header"><div class="player-name">${playerNames[i]}</div><div class="drink-counter" id="drinks-${pId}">Drinks: 0</div></div><div class="player-cards" id="cards-${pId}"></div><div class="player-actions" id="actions-${pId}" style="display:none;"></div>`;
@@ -519,7 +542,7 @@
             }
         }
 
-        // *** THE FIX IS HERE: Logic corrected to flip all players' cards ***
+        // *** THE FIX IS HERE: Logic corrected to flip all players' cards on all screens ***
         function startLocalMemorizePhase() {
             let timeLeft = 30;
             document.getElementById('countdown').textContent = timeLeft;
