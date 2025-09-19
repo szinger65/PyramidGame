@@ -80,21 +80,22 @@
         .player-item.is-you { border: 2px solid #3498db; }
         .status-indicator { width: 12px; height: 12px; border-radius: 50%; background-color: #27ae60; }
         
+        /* *** THE FIX IS HERE: Made container responsive *** */
         #table-container {
             position: relative;
-            width: 750px;
-            height: 750px;
+            width: 90vmin; /* Use viewport units for scaling */
+            height: 90vmin;
+            max-width: 750px; /* Set a max size */
+            max-height: 750px;
             display: flex;
             justify-content: center;
             align-items: center;
-            /* *** THE FIX IS HERE: Increased margin to lower the table *** */
-            margin-top: 50px; 
         }
 
         #table {
             position: absolute;
-            width: 450px;
-            height: 450px;
+            width: 60%; /* Relative to container */
+            height: 60%;
             background: #006400;
             border-radius: 50%;
             border: 20px solid #5C4033;
@@ -292,13 +293,15 @@
             const container = document.getElementById('table-container');
             container.innerHTML = `<div id="table"><div id="pyramid" class="pyramid"></div></div>`;
             
+            // *** THE FIX IS HERE: Added a small angle offset for even player counts ***
             const radius = 350; 
             const centerX = container.offsetWidth / 2;
             const centerY = container.offsetHeight / 2;
             const angleStep = 360 / players.length;
+            const angleOffset = (players.length % 2 === 0) ? angleStep / 2 : 0;
             
             players.forEach((pId, i) => {
-                const angle = angleStep * i * Math.PI / 180 - Math.PI / 2;
+                const angle = (angleStep * i + angleOffset) * Math.PI / 180 - Math.PI / 2;
                 const x = centerX + radius * Math.cos(angle);
                 const y = centerY + radius * Math.sin(angle);
                 const el = document.createElement('div');
