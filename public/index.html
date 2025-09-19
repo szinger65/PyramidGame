@@ -80,12 +80,11 @@
         .player-item.is-you { border: 2px solid #3498db; }
         .status-indicator { width: 12px; height: 12px; border-radius: 50%; background-color: #27ae60; }
         
-        /* *** THE FIX IS HERE: Made container responsive *** */
         #table-container {
             position: relative;
-            width: 90vmin; /* Use viewport units for scaling */
+            width: 90vmin;
             height: 90vmin;
-            max-width: 750px; /* Set a max size */
+            max-width: 750px;
             max-height: 750px;
             display: flex;
             justify-content: center;
@@ -94,7 +93,7 @@
 
         #table {
             position: absolute;
-            width: 60%; /* Relative to container */
+            width: 60%;
             height: 60%;
             background: #006400;
             border-radius: 50%;
@@ -289,19 +288,21 @@
 
         function startMultiplayerGame() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('game-screen').classList.add('active'); myPlayerId = playerId; updateGameFromState(); }
 
+        // *** THE FIX IS HERE: Rewritten player positioning logic ***
         function setupGameTable() {
             const container = document.getElementById('table-container');
             container.innerHTML = `<div id="table"><div id="pyramid" class="pyramid"></div></div>`;
             
-            // *** THE FIX IS HERE: Added a small angle offset for even player counts ***
-            const radius = 350; 
+            const radius = container.offsetWidth / 2 - 70; // Radius based on container size, minus player box width
             const centerX = container.offsetWidth / 2;
             const centerY = container.offsetHeight / 2;
             const angleStep = 360 / players.length;
-            const angleOffset = (players.length % 2 === 0) ? angleStep / 2 : 0;
+            
+            // Offset the starting angle to avoid placing a player directly at the bottom
+            const angleOffset = (players.length === 4 || players.length === 6) ? angleStep / 2 : 0;
             
             players.forEach((pId, i) => {
-                const angle = (angleStep * i + angleOffset) * Math.PI / 180 - Math.PI / 2;
+                const angle = (angleStep * i + angleOffset - 90) * Math.PI / 180; // Start from top
                 const x = centerX + radius * Math.cos(angle);
                 const y = centerY + radius * Math.sin(angle);
                 const el = document.createElement('div');
@@ -518,11 +519,14 @@
             }
         }
 
+        // *** THE FIX IS HERE: Logic corrected to flip all players' cards ***
         function startLocalMemorizePhase() {
             let timeLeft = 30;
             document.getElementById('countdown').textContent = timeLeft;
-            const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
-            myCards.forEach(c => c.classList.add('flipped'));
+            
+            // This now correctly selects ALL player cards on the table
+            const allPlayerCards = document.querySelectorAll('.player .card');
+            allPlayerCards.forEach(c => c.classList.add('flipped'));
             
             if (memorizeTimer) clearInterval(memorizeTimer);
 
@@ -531,7 +535,7 @@
                 document.getElementById('countdown').textContent = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(memorizeTimer);
-                    myCards.forEach(c => c.classList.remove('flipped'));
+                    allPlayerCards.forEach(c => c.classList.remove('flipped'));
                 }
             }, 1000);
         }
