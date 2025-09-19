@@ -82,12 +82,11 @@
         
         #table-container {
             position: relative;
-            width: 750px;
-            height: 750px;
+            width: 800px; 
+            height: 800px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-top: 30px;
         }
 
         #table {
@@ -287,7 +286,7 @@
 
         function startMultiplayerGame() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('game-screen').classList.add('active'); myPlayerId = playerId; updateGameFromState(); }
 
-        // *** THE FIX IS HERE: Rewritten player positioning logic with custom layouts ***
+        // *** THE FIX IS HERE: Rewritten player positioning with custom layouts ***
         function setupGameTable() {
             const container = document.getElementById('table-container');
             container.innerHTML = `<div id="table"><div id="pyramid" class="pyramid"></div></div>`;
@@ -295,22 +294,21 @@
             let positions = [];
             const playerCount = players.length;
 
-            // Define custom positions for each player count
             switch (playerCount) {
-                case 3: // Triangle formation
-                    positions = [ { x: '50%', y: '5%' }, { x: '15%', y: '95%' }, { x: '85%', y: '95%' } ];
+                case 3: // Triangle
+                    positions = [ { x: '50%', y: '0%' }, { x: '10%', y: '90%' }, { x: '90%', y: '90%' } ];
                     break;
-                case 4: // Diamond formation
+                case 4: // Diamond
                     positions = [ { x: '50%', y: '0%' }, { x: '100%', y: '50%' }, { x: '50%', y: '100%' }, { x: '0%', y: '50%' } ];
                     break;
-                case 5: // House formation
-                    positions = [ { x: '50%', y: '0%' }, { x: '95%', y: '40%' }, { x: '80%', y: '95%' }, { x: '20%', y: '95%' }, { x: '5%', y: '40%' } ];
+                case 5: // House
+                    positions = [ { x: '50%', y: '0%' }, { x: '100%', y: '45%' }, { x: '80%', y: '100%' }, { x: '20%', y: '100%' }, { x: '0%', y: '45%' } ];
                     break;
-                case 6: // Hexagon formation
-                    positions = [ { x: '50%', y: '0%' }, { x: '95%', y: '35%' }, { x: '95%', y: '65%' }, { x: '50%', y: '100%' }, { x: '5%', y: '65%' }, { x: '5%', y: '35%' } ];
+                case 6: // Hexagon
+                    positions = [ { x: '30%', y: '0%' }, { x: '70%', y: '0%' }, { x: '100%', y: '50%' }, { x: '70%', y: '100%' }, { x: '30%', y: '100%' }, { x: '0%', y: '50%' } ];
                     break;
-                case 7: // Three on top, four on bottom
-                    positions = [ { x: '50%', y: '0%' }, { x: '85%', y: '20%' }, { x: '100%', y: '60%' }, { x: '75%', y: '95%' }, { x: '25%', y: '95%' }, { x: '0%', y: '60%' }, { x: '15%', y: '20%' } ];
+                case 7: // Balanced 7
+                    positions = [ { x: '50%', y: '0%' }, { x: '85%', y: '25%' }, { x: '100%', y: '65%' }, { x: '75%', y: '100%' }, { x: '25%', y: '100%' }, { x: '0%', y: '65%' }, { x: '15%', y: '25%' } ];
                     break;
                 default: // Default circular layout for other cases
                     const radius = container.offsetWidth / 2 - 70;
@@ -542,7 +540,7 @@
             }
         }
 
-        // *** THE FIX IS HERE: Logic corrected to flip all players' cards on all screens ***
+        // *** THE FIX IS HERE: Logic corrected to flip ALL players' cards on all screens ***
         function startLocalMemorizePhase() {
             let timeLeft = 30;
             document.getElementById('countdown').textContent = timeLeft;
