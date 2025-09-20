@@ -27,7 +27,9 @@
             height: 100%;
         }
         
-        #menu-screen, #host-screen, #join-screen {
+        #menu-screen,
+        #host-screen,
+        #join-screen {
             padding-top: 50px;
             justify-content: flex-start;
             overflow-y: auto;
@@ -72,13 +74,55 @@
             cursor: not-allowed;
         }
 
-        .connection-info { background: rgba(52, 152, 219, 0.2); border: 1px solid #3498db; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center; }
-        .game-code { font-size: 1.5rem; font-weight: bold; color: #f1c40f; margin: 10px 0; letter-spacing: 3px; }
-        .players-list { background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin: 20px 0; min-height: 100px; }
-        .player-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; margin: 5px 0; background: rgba(255, 255, 255, 0.1); border-radius: 6px; }
-        .player-item.is-host { border: 2px solid #f1c40f; }
-        .player-item.is-you { border: 2px solid #3498db; }
-        .status-indicator { width: 12px; height: 12px; border-radius: 50%; background-color: #27ae60; }
+        .connection-info {
+            background: rgba(52, 152, 219, 0.2);
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .game-code {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f1c40f;
+            margin: 10px 0;
+            letter-spacing: 3px;
+        }
+
+        .players-list {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            min-height: 100px;
+        }
+
+        .player-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+        }
+
+        .player-item.is-host {
+            border: 2px solid #f1c40f;
+        }
+
+        .player-item.is-you {
+            border: 2px solid #3498db;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #27ae60;
+        }
         
         #table-container {
             position: relative;
@@ -101,41 +145,280 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), inset 0 0 25px rgba(0, 0, 0, 0.7);
         }
 
-        .pyramid { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        .row { display: flex; justify-content: center; margin: 3px 0; }
-        .player { position: absolute; display: flex; flex-direction: column; gap: 2px; background-color: rgba(0, 0, 0, 0.4); border: 1px dashed white; width: 140px; padding: 8px; justify-content: center; align-items: center; color: white; font-size: 0.8rem; border-radius: 8px; }
-        .player.current-user { background-color: rgba(52, 152, 219, 0.3); border: 2px solid #3498db; }
-        .player.is-host { border-color: #f1c40f; }
-        .player-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 5px; }
-        .player-name { font-size: 0.85rem; font-weight: bold; white-space: nowrap; margin-bottom: 3px; }
-        .drink-counter { background: rgba(220, 53, 69, 0.8); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; min-width: 20px; text-align: center; }
-        .player-cards { display: flex; gap: 2px; flex-wrap: nowrap; justify-content: center; margin-bottom: 5px; }
-        .card { width: 35px; height: 50px; perspective: 600px; cursor: default; }
-        .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
-        .card.flipped .card-inner { transform: rotateY(180deg); }
-        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 4px; border: 1px solid #aaa; background-color: white; background-size: contain; background-repeat: no-repeat; background-position: center; }
-        .card-back { background-image: url('https://deckofcardsapi.com/static/img/back.png'); }
-        .card-front { transform: rotateY(180deg); }
-        .pyramid .card { width: 38px; height: 55px; }
-        #game-controls { position: fixed; top: 20px; left: 20px; background: rgba(0, 0, 0, 0.9); color: white; padding: 15px; border-radius: 8px; font-size: 0.9rem; max-width: 250px; z-index: 2000; }
-        #current-turn { background: rgba(52, 152, 219, 0.8); padding: 5px 10px; border-radius: 6px; margin-bottom: 10px; text-align: center; font-weight: bold; }
-        .phase-actions { display: flex; flex-direction: column; gap: 5px; }
-        #timer-display { display: none; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: #2c2c2c; color: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 400px; width: 90%; z-index: 1100; }
-        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
-        .accept-btn { background-color: #dc3545; color: white; }
-        .challenge-btn { background-color: #ffc107; color: black; }
-        .target-player-btn { background-color: #28a745; color: white; margin: 5px; min-width: 120px; }
-        .cancel-btn { background-color: #6c757d; color: white; }
-        .game-message { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.9); color: white; padding: 20px 30px; border-radius: 10px; font-size: 1.2rem; font-weight: bold; z-index: 1500; text-align: center; max-width: 400px; border: 2px solid #f1c40f; display: none; animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -60%); } to { opacity: 1; transform: translate(-50%, -50%); } }
-        .connection-status { position: fixed; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.9); color: white; padding: 10px; border-radius: 6px; font-size: 0.9rem; }
-        .connection-status.connected { border: 2px solid #27ae60; }
-        .connection-status.disconnected { border: 2px solid #e74c3c; }
-        .action-btn { padding: 3px 6px; font-size: 0.65rem; margin: 2px; }
-        .prove-prompt { margin-top: 15px; padding: 10px; background-color: #ffc107; color: black; border-radius: 6px; text-align: center; }
-        .prove-prompt button { background-color: #dc3545; color: white; padding: 5px 10px; font-size: 0.8rem; margin-top: 5px; }
+        .pyramid {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            margin: 3px 0;
+        }
+
+        .player {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px dashed white;
+            width: 140px;
+            padding: 8px;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 0.8rem;
+            border-radius: 8px;
+        }
+
+        .player.current-user {
+            background-color: rgba(52, 152, 219, 0.3);
+            border: 2px solid #3498db;
+        }
+
+        .player.is-host {
+            border-color: #f1c40f;
+        }
+
+        .player-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .player-name {
+            font-size: 0.85rem;
+            font-weight: bold;
+            white-space: nowrap;
+            margin-bottom: 3px;
+        }
+
+        .drink-counter {
+            background: rgba(220, 53, 69, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .player-cards {
+            display: flex;
+            gap: 2px;
+            flex-wrap: nowrap;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+
+        .card {
+            width: 35px;
+            height: 50px;
+            perspective: 600px;
+            cursor: default;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 4px;
+            border: 1px solid #aaa;
+            background-color: white;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .card-back {
+            background-image: url('https://deckofcardsapi.com/static/img/back.png');
+        }
+
+        .card-front {
+            transform: rotateY(180deg);
+        }
+
+        .pyramid .card {
+            width: 38px;
+            height: 55px;
+        }
+
+        #game-controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            max-width: 250px;
+            z-index: 2000;
+        }
+
+        #current-turn {
+            background: rgba(52, 152, 219, 0.8);
+            padding: 5px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .phase-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        #timer-display {
+            display: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #2c2c2c;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            z-index: 1100;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .accept-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .challenge-btn {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .target-player-btn {
+            background-color: #28a745;
+            color: white;
+            margin: 5px;
+            min-width: 120px;
+        }
+
+        .cancel-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .game-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 1500;
+            text-align: center;
+            max-width: 400px;
+            border: 2px solid #f1c40f;
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .connection-status.connected {
+            border: 2px solid #27ae60;
+        }
+
+        .connection-status.disconnected {
+            border: 2px solid #e74c3c;
+        }
+
+        .action-btn {
+            padding: 3px 6px;
+            font-size: 0.65rem;
+            margin: 2px;
+        }
+
+        .prove-prompt {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #ffc107;
+            color: black;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .prove-prompt button {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
     </style>
 </head>
 
@@ -148,7 +431,8 @@
 
     <div id="host-screen" class="screen">
         <h1>Host New Game</h1>
-        <label>Your Name:</label><input type="text" id="host-name" value="Host">
+        <label>Your Name:</label>
+        <input type="text" id="host-name" value="Host">
         <button onclick="hostGame()" id="host-btn">Create Game</button>
         <button onclick="showMenuScreen()">Back</button>
         <div id="host-info" style="display:none;">
@@ -167,8 +451,10 @@
 
     <div id="join-screen" class="screen">
         <h1>Join Game</h1>
-        <label>Your Name:</label><input type="text" id="join-name" value="Player">
-        <label>Game Code:</label><input type="text" id="game-code-input" style="text-transform:uppercase;">
+        <label>Your Name:</label>
+        <input type="text" id="join-name" value="Player">
+        <label>Game Code:</label>
+        <input type="text" id="game-code-input" style="text-transform:uppercase;">
         <button onclick="joinGame()" id="join-btn">Join</button>
         <button onclick="showMenuScreen()">Back</button>
         <div id="join-info" style="display:none;">
@@ -188,7 +474,9 @@
             <div id="current-turn">Setting Up...</div>
             <div id="phase-display">Phase: Setup</div>
             <div id="timer-display">Time: <span id="countdown">30</span>s</div>
-            <div id="current-card-display" style="display:none;">Card: <span id="current-card"></span></div>
+            <div id="current-card-display" style="display:none;">
+                Card: <span id="current-card"></span>
+            </div>
             <div class="phase-actions">
                 <button onclick="autoStart()" id="auto-start-btn" style="display:none;">Deal Cards</button>
                 <button onclick="startMemorizePhase()" id="memorize-btn" style="display:none;">Start Memorizing</button>
@@ -227,8 +515,16 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script>
-        let socket = null, gameCode = null, playerId = null, isHost = false, gameState = {}, connectedPlayers = {};
-        let players = [], playerHands = {}, playerNames = [], myPlayerId = null;
+        let socket = null;
+        let gameCode = null;
+        let playerId = null;
+        let isHost = false;
+        let gameState = {};
+        let connectedPlayers = {};
+        let players = [];
+        let playerHands = {};
+        let playerNames = [];
+        let myPlayerId = null;
         let memorizeTimer = null;
 
         function initSocket() {
@@ -238,38 +534,121 @@
 
             socket.on('connect', () => updateConnectionStatus(true));
             socket.on('disconnect', () => updateConnectionStatus(false));
-            socket.on('error', (err) => { showGameMessage(err.message); document.getElementById('host-btn').disabled = false; document.getElementById('join-btn').disabled = false; });
-            socket.on('gameCreated', (data) => { gameCode = data.gameCode; playerId = data.playerId; isHost = true; document.getElementById('host-game-code').textContent = gameCode; document.getElementById('host-info').style.display = 'block'; updatePlayersList(data.players); });
-            socket.on('gameJoined', (data) => { gameCode = data.gameCode; playerId = data.playerId; isHost = false; document.getElementById('join-info').style.display = 'block'; updatePlayersList(data.players); });
+            
+            socket.on('error', (err) => {
+                showGameMessage(err.message);
+                document.getElementById('host-btn').disabled = false;
+                document.getElementById('join-btn').disabled = false;
+            });
+
+            socket.on('gameCreated', (data) => {
+                gameCode = data.gameCode;
+                playerId = data.playerId;
+                isHost = true;
+                document.getElementById('host-game-code').textContent = gameCode;
+                document.getElementById('host-info').style.display = 'block';
+                updatePlayersList(data.players);
+            });
+
+            socket.on('gameJoined', (data) => {
+                gameCode = data.gameCode;
+                playerId = data.playerId;
+                isHost = false;
+                document.getElementById('join-info').style.display = 'block';
+                updatePlayersList(data.players);
+            });
+
             socket.on('playerJoined', (data) => updatePlayersList(data.players));
             socket.on('playerLeft', (data) => updatePlayersList(data.players));
-            socket.on('gameStarted', (data) => { gameState = data.gameState; startMultiplayerGame(); });
-            socket.on('gameStateUpdate', (data) => { gameState = data.gameState; updateGameFromState(); });
+            
+            socket.on('gameStarted', (data) => {
+                gameState = data.gameState;
+                startMultiplayerGame();
+            });
+
+            socket.on('gameStateUpdate', (data) => {
+                gameState = data.gameState;
+                updateGameFromState();
+            });
+
             socket.on('challengeReceived', (data) => receiveChallenge(data));
             socket.on('cardRecallResult', (data) => handleCardRecallResult(data));
-            socket.on('challengeResult', (data) => { showGameMessage(data.message, 4000); if (data.reveal) flipPlayerCard(data.reveal.playerId, data.reveal.cardValue); });
+            
+            socket.on('challengeResult', (data) => {
+                showGameMessage(data.message, 4000);
+                if (data.reveal) {
+                    flipPlayerCard(data.reveal.playerId, data.reveal.cardValue);
+                }
+            });
+
             socket.on('proveYourCard', (data) => showCardFlipModal(data.cardValue));
             socket.on('beginRecallTurn', (data) => showCardRecallInput(data.playerIndex));
         }
 
-        function showMenuScreen() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('menu-screen').classList.add('active'); }
-        function showHostScreen() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('host-screen').classList.add('active'); }
-        function showJoinScreen() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('join-screen').classList.add('active'); }
+        function showMenuScreen() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('menu-screen').classList.add('active');
+        }
 
-        function hostGame() { const hostName = document.getElementById('host-name').value.trim() || 'Host'; if (!socket || !socket.connected) return showGameMessage('Connecting...'); socket.emit('hostGame', { playerName: hostName }); document.getElementById('host-btn').disabled = true; }
-        function joinGame() { const playerName = document.getElementById('join-name').value.trim() || 'Player'; const code = document.getElementById('game-code-input').value.trim().toUpperCase(); if (!code) return showGameMessage('Please enter a game code'); if (!socket || !socket.connected) return showGameMessage('Connecting...'); socket.emit('joinGame', { gameCode: code, playerName: playerName }); document.getElementById('join-btn').disabled = true; }
-        function startHostedGame() { if (Object.keys(connectedPlayers).length < 3) return showGameMessage('Need at least 3 players'); socket.emit('startGame', { gameCode }); }
+        function showHostScreen() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('host-screen').classList.add('active');
+        }
 
-        function updateConnectionStatus(connected) { const status = document.getElementById('connection-status'); status.textContent = connected ? 'Connected' : 'Disconnected'; status.className = `connection-status ${connected ? 'connected' : 'disconnected'}`; }
+        function showJoinScreen() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('join-screen').classList.add('active');
+        }
+
+        function hostGame() {
+            const hostName = document.getElementById('host-name').value.trim() || 'Host';
+            if (!socket || !socket.connected) {
+                return showGameMessage('Connecting...');
+            }
+            socket.emit('hostGame', { playerName: hostName });
+            document.getElementById('host-btn').disabled = true;
+        }
+
+        function joinGame() {
+            const playerName = document.getElementById('join-name').value.trim() || 'Player';
+            const code = document.getElementById('game-code-input').value.trim().toUpperCase();
+            
+            if (!code) {
+                return showGameMessage('Please enter a game code');
+            }
+            if (!socket || !socket.connected) {
+                return showGameMessage('Connecting...');
+            }
+            
+            socket.emit('joinGame', { gameCode: code, playerName: playerName });
+            document.getElementById('join-btn').disabled = true;
+        }
+
+        function startHostedGame() {
+            if (Object.keys(connectedPlayers).length < 3) {
+                return showGameMessage('Need at least 3 players');
+            }
+            socket.emit('startGame', { gameCode });
+        }
+
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connection-status');
+            status.textContent = connected ? 'Connected' : 'Disconnected';
+            status.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
+        }
 
         function updatePlayersList(serverPlayers) {
             connectedPlayers = serverPlayers;
             const playerCount = Object.keys(connectedPlayers).length;
             const startBtn = document.getElementById('start-game-btn');
+            
             if (startBtn) {
                 startBtn.disabled = playerCount < 3;
-                startBtn.textContent = playerCount < 3 ? `Need ${3 - playerCount} more player(s)` : `Start Game (${playerCount} players)`;
+                startBtn.textContent = playerCount < 3 ? 
+                    `Need ${3 - playerCount} more player(s)` : 
+                    `Start Game (${playerCount} players)`;
             }
+            
             ['host-players-list', 'join-players-list'].forEach(listId => {
                 const list = document.getElementById(listId);
                 if (list) {
@@ -279,18 +658,35 @@
                         item.className = 'player-item';
                         if (p.isHost) item.classList.add('is-host');
                         if (p.id === playerId) item.classList.add('is-you');
-                        item.innerHTML = `<span>${p.name} ${p.isHost ? '👑' : ''} ${p.id === playerId ? '(You)' : ''}</span><div class="status-indicator"></div>`;
+                        
+                        item.innerHTML = `
+                            <span>
+                                ${p.name} 
+                                ${p.isHost ? '👑' : ''} 
+                                ${p.id === playerId ? '(You)' : ''}
+                            </span>
+                            <div class="status-indicator"></div>
+                        `;
                         list.appendChild(item);
                     });
                 }
             });
         }
 
-        function startMultiplayerGame() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('game-screen').classList.add('active'); myPlayerId = playerId; updateGameFromState(); }
+        function startMultiplayerGame() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('game-screen').classList.add('active');
+            myPlayerId = playerId;
+            updateGameFromState();
+        }
 
         function setupGameTable() {
             const container = document.getElementById('table-container');
-            container.innerHTML = `<div id="table"><div id="pyramid" class="pyramid"></div></div>`;
+            container.innerHTML = `
+                <div id="table">
+                    <div id="pyramid" class="pyramid"></div>
+                </div>
+            `;
             
             const radius = 350; 
             const centerX = container.offsetWidth / 2;
@@ -312,23 +708,62 @@
                 const el = document.createElement('div');
                 el.className = 'player';
                 el.id = pId;
-                el.style.left = `${x}px`; el.style.top = `${y}px`; el.style.transform = 'translate(-50%, -50%)';
+                el.style.left = `${x}px`;
+                el.style.top = `${y}px`;
+                el.style.transform = 'translate(-50%, -50%)';
+                
                 if (pId === myPlayerId) el.classList.add('current-user');
                 if (connectedPlayers[pId]?.isHost) el.classList.add('is-host');
-                el.innerHTML = `<div class="player-header"><div class="player-name">${playerNames[i]}</div><div class="drink-counter" id="drinks-${pId}">Drinks: 0</div></div><div class="player-cards" id="cards-${pId}"></div><div class="player-actions" id="actions-${pId}" style="display:none;"></div>`;
+                
+                el.innerHTML = `
+                    <div class="player-header">
+                        <div class="player-name">${playerNames[i]}</div>
+                        <div class="drink-counter" id="drinks-${pId}">Drinks: 0</div>
+                    </div>
+                    <div class="player-cards" id="cards-${pId}"></div>
+                    <div class="player-actions" id="actions-${pId}" style="display:none;"></div>
+                `;
                 container.appendChild(el);
             });
         }
 
-        function showGameMessage(msg, dur = 3000) { const el = document.getElementById('game-message'); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', dur); }
-        function autoStart() { if (isHost) socket.emit('gameAction', { gameCode, action: 'autoStart' }); }
-        function startMemorizePhase() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startMemorize' }); }
-        function nextPyramidCard() { if (isHost) socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' }); }
-        function startRecall() { if (isHost) socket.emit('gameAction', { gameCode, action: 'startRecall' }); }
+        function showGameMessage(msg, dur = 3000) {
+            const el = document.getElementById('game-message');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', dur);
+        }
+
+        function autoStart() {
+            if (isHost) {
+                socket.emit('gameAction', { gameCode, action: 'autoStart' });
+            }
+        }
+
+        function startMemorizePhase() {
+            if (isHost) {
+                socket.emit('gameAction', { gameCode, action: 'startMemorize' });
+            }
+        }
+
+        function nextPyramidCard() {
+            if (isHost) {
+                socket.emit('gameAction', { gameCode, action: 'flipPyramidCard' });
+            }
+        }
+
+        function startRecall() {
+            if (isHost) {
+                socket.emit('gameAction', { gameCode, action: 'startRecall' });
+            }
+        }
 
         function showCardFlipModal(requiredCardValue) {
             const prompt = document.getElementById('prove-card-prompt');
-            prompt.innerHTML = `<strong>Prove you have a ${requiredCardValue}!</strong><br>Click a card or <button>admit bluff</button>.`;
+            prompt.innerHTML = `
+                <strong>Prove you have a ${requiredCardValue}!</strong><br>
+                Click a card or <button>admit bluff</button>.
+            `;
             prompt.style.display = 'block';
 
             const cleanup = () => {
@@ -362,6 +797,7 @@
         function flipPlayerCard(pId, cardValue) {
             const pCards = document.querySelectorAll(`#${pId} .card`);
             const pHand = playerHands[pId] || [];
+            
             for (let i = 0; i < pHand.length; i++) {
                 if (pHand[i].value === cardValue && !pCards[i].classList.contains('flipped')) {
                     setTimeout(() => pCards[i].classList.add('flipped'), 10);
@@ -375,12 +811,25 @@
                 const modal = document.createElement('div');
                 modal.className = 'modal';
                 modal.style.display = 'flex';
-                modal.innerHTML = `<div class="modal-content"><h3>Recite your cards!</h3><p>Enter values (e.g., "A 5 K 2"):</p><input type="text" id="card-recall-input" style="width: 80%;"><div class="modal-buttons"><button class="challenge-btn">Submit</button></div></div>`;
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3>Recite your cards!</h3>
+                        <p>Enter values (e.g., "A 5 K 2"):</p>
+                        <input type="text" id="card-recall-input" style="width: 80%;">
+                        <div class="modal-buttons">
+                            <button class="challenge-btn">Submit</button>
+                        </div>
+                    </div>
+                `;
                 document.body.appendChild(modal);
+                
                 const input = modal.querySelector('#card-recall-input');
                 input.focus();
+                
                 modal.querySelector('.challenge-btn').onclick = () => {
-                    if (!input.value.trim()) return showGameMessage('Please enter cards');
+                    if (!input.value.trim()) {
+                        return showGameMessage('Please enter cards');
+                    }
                     socket.emit('verifyCardRecall', { gameCode, playerId, recalledCards: input.value });
                     modal.remove();
                 };
@@ -389,45 +838,88 @@
             }
         }
 
-        function handleCardRecallResult(data) { showGameMessage(data.correct ? `${data.playerName} was correct!` : `${data.playerName} was wrong!`, 2500); }
+        function handleCardRecallResult(data) {
+            const message = data.correct ? 
+                `${data.playerName} was correct!` : 
+                `${data.playerName} was wrong!`;
+            showGameMessage(message, 2500);
+        }
         
         function makeSomeoneDrink() {
-            if (!gameState.currentPyramidCard) return showGameMessage("Wait for a card!");
+            if (!gameState.currentPyramidCard) {
+                return showGameMessage("Wait for a card!");
+            }
+            
             const modal = document.getElementById('target-modal');
             const buttons = document.getElementById('target-buttons');
             buttons.innerHTML = '';
+            
             players.filter(p => p !== myPlayerId).forEach(targetId => {
-                const btn = document.createElement('button'); btn.className = 'target-player-btn'; btn.textContent = playerNames[players.indexOf(targetId)];
-                btn.onclick = () => { socket.emit('challenge', { gameCode, challengerId: myPlayerId, targetId }); modal.style.display = 'none'; };
+                const btn = document.createElement('button');
+                btn.className = 'target-player-btn';
+                btn.textContent = playerNames[players.indexOf(targetId)];
+                btn.onclick = () => {
+                    socket.emit('challenge', { gameCode, challengerId: myPlayerId, targetId });
+                    modal.style.display = 'none';
+                };
                 buttons.appendChild(btn);
             });
-            const cancelBtn = document.createElement('button'); cancelBtn.className = 'cancel-btn'; cancelBtn.textContent = 'Cancel'; cancelBtn.onclick = () => modal.style.display = 'none';
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'cancel-btn';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.onclick = () => modal.style.display = 'none';
             buttons.appendChild(cancelBtn);
+            
             modal.style.display = 'flex';
         }
 
         function receiveChallenge(data) {
             if (data.targetId === myPlayerId) {
-                document.getElementById('bluff-message').textContent = `${playerNames[players.indexOf(data.challengerId)]} says you drink!`;
+                const challengerName = playerNames[players.indexOf(data.challengerId)];
+                document.getElementById('bluff-message').textContent = `${challengerName} says you drink!`;
                 document.getElementById('bluff-modal').style.display = 'flex';
             }
         }
         
-        function acceptDrink() { document.getElementById('bluff-modal').style.display = 'none'; socket.emit('challengeResponse', { gameCode, response: 'accept' }); }
-        function callBluff() { document.getElementById('bluff-modal').style.display = 'none'; socket.emit('challengeResponse', { gameCode, response: 'challenge' }); }
+        function acceptDrink() {
+            document.getElementById('bluff-modal').style.display = 'none';
+            socket.emit('challengeResponse', { gameCode, response: 'accept' });
+        }
+
+        function callBluff() {
+            document.getElementById('bluff-modal').style.display = 'none';
+            socket.emit('challengeResponse', { gameCode, response: 'challenge' });
+        }
 
         function updateGameFromState() {
             if (!gameState || !gameState.players) return;
-            players = gameState.players; playerNames = gameState.playerNames;
+            
+            players = gameState.players;
+            playerNames = gameState.playerNames;
             
             if (gameState.phase === 'setup' || document.querySelectorAll('.player').length !== players.length) {
                 setupGameTable();
             }
 
-            Object.entries(gameState.playerHands || {}).forEach(([pId, cards]) => { playerHands[pId] = cards; updatePlayerCardsDisplay(pId, cards); });
-            Object.entries(gameState.drinkCounts || {}).forEach(([pId, count]) => { if (document.getElementById(`drinks-${pId}`)) document.getElementById(`drinks-${pId}`).textContent = `Drinks: ${count}`; });
+            Object.entries(gameState.playerHands || {}).forEach(([pId, cards]) => {
+                playerHands[pId] = cards;
+                updatePlayerCardsDisplay(pId, cards);
+            });
+
+            Object.entries(gameState.drinkCounts || {}).forEach(([pId, count]) => {
+                const drinkEl = document.getElementById(`drinks-${pId}`);
+                if (drinkEl) {
+                    drinkEl.textContent = `Drinks: ${count}`;
+                }
+            });
+
             updatePyramidFromState(gameState.pyramidCards || []);
-            if (gameState.currentPyramidCard) document.getElementById('current-card').textContent = gameState.currentPyramidCard;
+            
+            if (gameState.currentPyramidCard) {
+                document.getElementById('current-card').textContent = gameState.currentPyramidCard;
+            }
+            
             showPlayerActions(gameState.phase === 'pyramid');
             updateGameStatus(gameState.phase);
         }
@@ -435,6 +927,7 @@
         function updatePlayerCardsDisplay(pId, cards) {
             const container = document.getElementById(`cards-${pId}`);
             if (!container) return;
+            
             container.innerHTML = '';
             cards.forEach(card => container.appendChild(createCardElement(card)));
         }
@@ -442,13 +935,23 @@
         function createCardElement(card) {
             const el = document.createElement('div');
             el.className = 'card';
+            
             const cardInner = document.createElement('div');
             cardInner.className = 'card-inner';
             
             const cardFront = document.createElement('div');
             cardFront.className = 'card-front';
-            const valueMap = { 'A': 'A', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '10': '0', 'J': 'J', 'Q': 'Q', 'K': 'K' };
-            const suitMap = { '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C' };
+            
+            const valueMap = {
+                'A': 'A', '2': '2', '3': '3', '4': '4', '5': '5',
+                '6': '6', '7': '7', '8': '8', '9': '9', '10': '0',
+                'J': 'J', 'Q': 'Q', 'K': 'K'
+            };
+            
+            const suitMap = {
+                '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C'
+            };
+            
             const cardCode = `${valueMap[card.value]}${suitMap[card.suit]}`;
             cardFront.style.backgroundImage = `url('https://deckofcardsapi.com/static/img/${cardCode}.png')`;
             
@@ -458,21 +961,27 @@
             cardInner.appendChild(cardFront);
             cardInner.appendChild(cardBack);
             el.appendChild(cardInner);
+            
             return el;
         }
 
         function updatePyramidFromState(pyramidData) {
             const container = document.getElementById('pyramid');
             if (!container) return;
+            
             if (!container.hasChildNodes() || pyramidData.length === 0) {
                 container.innerHTML = '';
                 let cardIndex = 0;
+                
                 for (let rows = 1; cardIndex < pyramidData.length; rows++) {
                     const rowEl = document.createElement('div');
                     rowEl.className = 'row';
+                    
                     for (let i = 0; i < rows && cardIndex < pyramidData.length; i++, cardIndex++) {
                         const card = createCardElement(pyramidData[cardIndex]);
-                        if (pyramidData[cardIndex].revealed) card.classList.add('flipped');
+                        if (pyramidData[cardIndex].revealed) {
+                            card.classList.add('flipped');
+                        }
                         rowEl.appendChild(card);
                     }
                     container.appendChild(rowEl);
@@ -490,32 +999,76 @@
         }
         
         function updateGameStatus(phase) {
-            const ctrls = { p: document.getElementById('phase-display'), t: document.getElementById('current-turn'), tm: document.getElementById('timer-display'), cd: document.getElementById('current-card-display') };
-            const btns = { auto: document.getElementById('auto-start-btn'), mem: document.getElementById('memorize-btn'), pyr: document.getElementById('pyramid-btn'), rec: document.getElementById('recall-btn') };
-            Object.values(btns).forEach(b => b.style.display = 'none');
-            if (document.getElementById('restart-btn')) document.getElementById('restart-btn').remove();
+            const controls = {
+                phaseDisplay: document.getElementById('phase-display'),
+                currentTurn: document.getElementById('current-turn'),
+                timerDisplay: document.getElementById('timer-display'),
+                currentCardDisplay: document.getElementById('current-card-display')
+            };
 
-            const allPyramidCardsFlipped = gameState.pyramidCards && gameState.pyramidCards.every(c => c.revealed);
-            ctrls.tm.style.display = 'none';
+            const buttons = {
+                autoStart: document.getElementById('auto-start-btn'),
+                memorize: document.getElementById('memorize-btn'),
+                pyramid: document.getElementById('pyramid-btn'),
+                recall: document.getElementById('recall-btn')
+            };
+
+            Object.values(buttons).forEach(btn => btn.style.display = 'none');
+            
+            const restartBtn = document.getElementById('restart-btn');
+            if (restartBtn) {
+                restartBtn.remove();
+            }
+
+            const allPyramidCardsFlipped = gameState.pyramidCards && 
+                gameState.pyramidCards.every(c => c.revealed);
+            controls.timerDisplay.style.display = 'none';
 
             switch (phase) {
-                case 'setup': ctrls.p.textContent = 'Phase: Ready'; ctrls.t.textContent = 'Ready to Start!'; if (isHost) btns.auto.style.display = 'block'; break;
-                case 'dealt': ctrls.p.textContent = 'Phase: Memorize'; ctrls.t.textContent = 'Cards Dealt!'; if (isHost) btns.mem.style.display = 'block'; break;
-                case 'memorize': 
-                    ctrls.p.textContent = 'Phase: MEMORIZE!'; ctrls.t.textContent = 'Memorize!'; 
-                    ctrls.tm.style.display = 'block'; 
-                    startLocalMemorizePhase(); 
+                case 'setup':
+                    controls.phaseDisplay.textContent = 'Phase: Ready';
+                    controls.currentTurn.textContent = 'Ready to Start!';
+                    if (isHost) buttons.autoStart.style.display = 'block';
                     break;
+
+                case 'dealt':
+                    controls.phaseDisplay.textContent = 'Phase: Memorize';
+                    controls.currentTurn.textContent = 'Cards Dealt!';
+                    if (isHost) buttons.memorize.style.display = 'block';
+                    break;
+
+                case 'memorize':
+                    controls.phaseDisplay.textContent = 'Phase: MEMORIZE!';
+                    controls.currentTurn.textContent = 'Memorize!';
+                    controls.timerDisplay.style.display = 'block';
+                    startLocalMemorizePhase();
+                    break;
+
                 case 'pyramid':
-                    ctrls.p.textContent = 'Phase: Pyramid'; ctrls.t.textContent = 'Pyramid';
-                    if (isHost && !allPyramidCardsFlipped) btns.pyr.style.display = 'block';
-                    if (isHost && allPyramidCardsFlipped) btns.rec.style.display = 'block';
+                    controls.phaseDisplay.textContent = 'Phase: Pyramid';
+                    controls.currentTurn.textContent = 'Pyramid';
+                    if (isHost && !allPyramidCardsFlipped) {
+                        buttons.pyramid.style.display = 'block';
+                    }
+                    if (isHost && allPyramidCardsFlipped) {
+                        buttons.recall.style.display = 'block';
+                    }
                     break;
-                case 'recall': ctrls.p.textContent = 'Phase: Recall'; ctrls.t.textContent = 'Recall Cards!'; break;
+
+                case 'recall':
+                    controls.phaseDisplay.textContent = 'Phase: Recall';
+                    controls.currentTurn.textContent = 'Recall Cards!';
+                    break;
+
                 case 'finished':
-                    ctrls.p.textContent = 'Phase: Game Over'; ctrls.t.textContent = 'Game Finished!';
+                    controls.phaseDisplay.textContent = 'Phase: Game Over';
+                    controls.currentTurn.textContent = 'Game Finished!';
                     if (isHost) {
-                        const btn = document.createElement('button'); btn.id = 'restart-btn'; btn.textContent = 'Restart Game'; btn.style.backgroundColor = '#27ae60'; btn.style.color = 'white';
+                        const btn = document.createElement('button');
+                        btn.id = 'restart-btn';
+                        btn.textContent = 'Restart Game';
+                        btn.style.backgroundColor = '#27ae60';
+                        btn.style.color = 'white';
                         btn.onclick = () => socket.emit('gameAction', { gameCode, action: 'restartGame' });
                         document.querySelector('.phase-actions').appendChild(btn);
                     }
@@ -523,7 +1076,6 @@
             }
         }
 
-        // *** THE FIX IS HERE: Logic corrected to flip ONLY the local player's cards and run the timer correctly ***
         function startLocalMemorizePhase() {
             setTimeout(() => {
                 let timeLeft = 30;
@@ -533,7 +1085,9 @@
                 const myCards = document.querySelectorAll(`#${myPlayerId} .card`);
                 myCards.forEach(c => c.classList.add('flipped'));
                 
-                if (memorizeTimer) clearInterval(memorizeTimer);
+                if (memorizeTimer) {
+                    clearInterval(memorizeTimer);
+                }
 
                 memorizeTimer = setInterval(() => {
                     timeLeft--;
@@ -543,14 +1097,20 @@
                         myCards.forEach(c => c.classList.remove('flipped'));
                     }
                 }, 1000);
-            }, 100); // Small delay to ensure elements are rendered
+            }, 100);
         }
 
         function showPlayerActions(show) {
             const actions = document.getElementById(`actions-${myPlayerId}`);
             if (actions) {
                 actions.style.display = show ? 'flex' : 'none';
-                if (show) actions.innerHTML = `<button class="action-btn target-btn" onclick="makeSomeoneDrink()">Make Drink</button>`;
+                if (show) {
+                    actions.innerHTML = `
+                        <button class="action-btn target-btn" onclick="makeSomeoneDrink()">
+                            Make Drink
+                        </button>
+                    `;
+                }
             }
         }
         
