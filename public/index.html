@@ -303,7 +303,15 @@
             players.forEach((pId, i) => {
                 const angle = (angleStep * i + angleOffset) * Math.PI / 180 - Math.PI / 2;
                 const x = centerX + radius * Math.cos(angle);
-                const y = (centerY + radius * Math.sin(angle)) + 15;
+                // const y = (centerY + radius * Math.sin(angle)) + 15;
+                let y;
+                if (players.length % 2 !== 0) {
+                  // Odd number of players
+                    y = (centerY + radius * Math.sin(angle)) + 20;
+                } else {
+                  // Even number of players
+                    y = centerY + radius * Math.sin(angle);
+                }
                 const el = document.createElement('div');
                 el.className = 'player';
                 el.id = pId;
