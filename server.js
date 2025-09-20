@@ -167,6 +167,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // *** THE FIX IS HERE: Rewritten logic for server-side validation ***
   socket.on('proveCard', (data) => {
     const game = games.get(data.gameCode);
     if (!game || !game.activeBluff) return;
@@ -174,17 +175,21 @@ io.on('connection', (socket) => {
     const { targetId } = game.activeBluff;
     const challengerName = game.players[challengerId]?.name;
     const targetName = game.players[targetId]?.name;
-
+    
     if (data.proved) {
+      // Player clicked a card. Server must verify if it was the correct one.
       const hasCard = game.playerHands[challengerId].some(c => c.value === data.cardValue);
       if(hasCard) {
+        // Correct card was clicked. Target drinks.
         game.drinkCounts[targetId] += 2;
         broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} had the card! ${targetName} drinks twice! 🍺🍺` });
       } else {
+        // Incorrect card was clicked. Challenger drinks.
         game.drinkCounts[challengerId]++;
         broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} clicked the wrong card! They drink! 🍺` });
       }
     } else {
+      // Player clicked "admit bluff".
       game.drinkCounts[challengerId]++;
       broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} admitted bluffing! They drink! 🍺` });
     }
@@ -200,9 +205,6 @@ io.on('connection', (socket) => {
     const actualCardValues = (game.playerHands[playerId] || []).map(c => c.value).sort();
     const recalledCardValues = parseRecalledCards(data.recalledCards).sort();
     const correct = arraysEqual(actualCardValues, recalledCardValues);
-
-    // *** THE FIX IS HERE: Removed the automatic 5-drink penalty ***
-    // if (!correct) game.drinkCounts[playerId] = (game.drinkCounts[playerId] || 0) + 5;
 
     broadcastToGame(data.gameCode, 'cardRecallResult', { playerName: game.players[playerId]?.name, correct });
 
