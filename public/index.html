@@ -84,8 +84,8 @@
             position: relative;
             width: 90vmin;
             height: 90vmin;
-            max-width: 750px;
-            max-height: 750px;
+            max-width: 800px;
+            max-height: 800px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -292,7 +292,7 @@
             const container = document.getElementById('table-container');
             container.innerHTML = `<div id="table"><div id="pyramid" class="pyramid"></div></div>`;
             
-            const radius = 350; 
+            const radius = 350;
             const centerX = container.offsetWidth / 2;
             const centerY = container.offsetHeight / 2;
             const angleStep = 360 / players.length;
@@ -301,13 +301,7 @@
             players.forEach((pId, i) => {
                 const angle = (angleStep * i + angleOffset) * Math.PI / 180 - Math.PI / 2;
                 const x = centerX + radius * Math.cos(angle);
-                
-                let y;
-                if (players.length % 2 !== 0) {
-                    y = (centerY + radius * Math.sin(angle)) + 20;
-                } else {
-                    y = centerY + radius * Math.sin(angle);
-                }
+                const y = centerY + radius * Math.sin(angle);
 
                 const el = document.createElement('div');
                 el.className = 'player';
@@ -523,6 +517,7 @@
             }
         }
 
+        // *** THE FIX IS HERE: Corrected to only flip the local player's cards ***
         function startLocalMemorizePhase() {
             let timeLeft = 30;
             document.getElementById('countdown').textContent = timeLeft;
