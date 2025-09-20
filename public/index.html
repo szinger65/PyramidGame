@@ -303,7 +303,7 @@
             players.forEach((pId, i) => {
                 const angle = (angleStep * i + angleOffset) * Math.PI / 180 - Math.PI / 2;
                 const x = centerX + radius * Math.cos(angle);
-                const y = centerY + radius * Math.sin(angle);
+                const y = (centerY + radius * Math.sin(angle)) - 20;
                 const el = document.createElement('div');
                 el.className = 'player';
                 el.id = pId;
