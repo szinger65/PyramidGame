@@ -419,6 +419,26 @@
             font-size: 0.8rem;
             margin-top: 5px;
         }
+        .rules {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+        }
+        .rules-button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.2rem;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .rules-button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 
@@ -489,6 +509,9 @@
             <div id="table">
                 <div id="pyramid" class="pyramid"></div>
             </div>
+        </div>
+        <div class="rules">
+              <button class="rules-button">Rules</button>
         </div>
         <div id="connection-status" class="connection-status disconnected">...</div>
     </div>
