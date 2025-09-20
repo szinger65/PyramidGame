@@ -80,12 +80,11 @@
         .player-item.is-you { border: 2px solid #3498db; }
         .status-indicator { width: 12px; height: 12px; border-radius: 50%; background-color: #27ae60; }
         
-        /* *** THE FIX IS HERE: Made container responsive *** */
         #table-container {
             position: relative;
-            width: 90vmin; /* Use viewport units for scaling */
+            width: 90vmin;
             height: 90vmin;
-            max-width: 750px; /* Set a max size */
+            max-width: 750px;
             max-height: 750px;
             display: flex;
             justify-content: center;
@@ -94,7 +93,7 @@
 
         #table {
             position: absolute;
-            width: 60%; /* Relative to container */
+            width: 60%;
             height: 60%;
             background: #006400;
             border-radius: 50%;
@@ -293,7 +292,6 @@
             const container = document.getElementById('table-container');
             container.innerHTML = `<div id="table"><div id="pyramid" class="pyramid"></div></div>`;
             
-            // *** THE FIX IS HERE: Added a small angle offset for even player counts ***
             const radius = 350; 
             const centerX = container.offsetWidth / 2;
             const centerY = container.offsetHeight / 2;
@@ -303,15 +301,14 @@
             players.forEach((pId, i) => {
                 const angle = (angleStep * i + angleOffset) * Math.PI / 180 - Math.PI / 2;
                 const x = centerX + radius * Math.cos(angle);
-                // const y = (centerY + radius * Math.sin(angle)) + 15;
+                
                 let y;
                 if (players.length % 2 !== 0) {
-                  // Odd number of players
                     y = (centerY + radius * Math.sin(angle)) + 20;
                 } else {
-                  // Even number of players
                     y = centerY + radius * Math.sin(angle);
                 }
+
                 const el = document.createElement('div');
                 el.className = 'player';
                 el.id = pId;
