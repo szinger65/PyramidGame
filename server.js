@@ -201,7 +201,7 @@ io.on('connection', (socket) => {
         const game = games.get(data.gameCode);
         
         if (!game || game.host !== socket.id) {
-            return socket.emit('error', { message: 'Only host can start' });
+            return socket.emit('error', { message: 'Only host can start the game' });
         }
         if (game.playerOrder.length < 3) {
             return socket.emit('error', { message: 'Need at least 3 players' });
@@ -287,7 +287,7 @@ io.on('connection', (socket) => {
         if (data.response === 'accept') {
             game.drinkCounts[targetId]++;
             broadcastToGame(data.gameCode, 'challengeResult', {
-                message: `${targetName} takes the drink! 🍺`
+                message: `${targetName} chooses to take the drink! 🍺`
             });
             game.activeBluff = null;
             broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
@@ -319,18 +319,18 @@ io.on('connection', (socket) => {
             if (hasCard) {
                 game.drinkCounts[targetId] += 2;
                 broadcastToGame(data.gameCode, 'challengeResult', {
-                    message: `${challengerName} had the card! ${targetName} drinks twice! 🍺🍺`
+                    message: `${challengerName} had the card! ${targetName} drinks twice! 🍺`
                 });
             } else {
                 game.drinkCounts[challengerId]++;
                 broadcastToGame(data.gameCode, 'challengeResult', {
-                    message: `${challengerName} clicked the wrong card! They drink! 🍺`
+                    message: `${challengerName} chose the wrong card! They drink! 🍺`
                 });
             }
         } else {
             game.drinkCounts[challengerId]++;
             broadcastToGame(data.gameCode, 'challengeResult', {
-                message: `${challengerName} admitted bluffing! They drink! 🍺`
+                message: `${challengerName} was bluffing! They drink! 🍺`
             });
         }
 
