@@ -308,7 +308,7 @@
         }
 
         .modal-content {
-            background: #2c2c2c;
+            background: #000000;
             color: white;
             padding: 20px;
             border-radius: 10px;
@@ -332,12 +332,12 @@
         }
 
         .challenge-btn {
-            background-color: #ffc107;
+            background-color: #00008B;
             color: black;
         }
 
         .target-player-btn {
-            background-color: #28a745;
+            background-color: #ADD8E6;
             color: white;
             margin: 5px;
             min-width: 120px;
@@ -362,7 +362,7 @@
             z-index: 1500;
             text-align: center;
             max-width: 400px;
-            border: 2px solid #f1c40f;
+            border: 2px solid #000000;
             display: none;
             animation: fadeIn 0.3s ease-in;
         }
@@ -495,7 +495,7 @@
 
     <div id="target-modal" class="modal">
         <div class="modal-content">
-            <h3 id="target-message">Who drinks?</h3>
+            <h3 id="target-message">Pick who you want to drink?</h3>
             <div id="target-buttons" class="modal-buttons"></div>
         </div>
     </div>
@@ -503,7 +503,7 @@
     <div id="bluff-modal" class="modal">
         <div class="modal-content">
             <h3 id="bluff-message">...</h3>
-            <p>Do you believe them?</p>
+            <p>Do you want to drink or call their bluff?</p>
             <div class="modal-buttons">
                 <button class="accept-btn" onclick="acceptDrink()">Take Drink</button>
                 <button class="challenge-btn" onclick="callBluff()">Call Bluff!</button>
@@ -1107,7 +1107,7 @@
                 if (show) {
                     actions.innerHTML = `
                         <button class="action-btn target-btn" onclick="makeSomeoneDrink()">
-                            Make Drink
+                            Make Someone Drink
                         </button>
                     `;
                 }
