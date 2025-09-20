@@ -167,6 +167,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // *** THE FIX IS HERE: Logic updated for server-side validation and "admit bluff" feedback ***
   socket.on('proveCard', (data) => {
     const game = games.get(data.gameCode);
     if (!game || !game.activeBluff) return;
@@ -176,6 +177,7 @@ io.on('connection', (socket) => {
     const targetName = game.players[targetId]?.name;
 
     if (data.proved) {
+      // Player clicked a card. Server must verify if it was the correct one.
       const hasCard = game.playerHands[challengerId].some(c => c.value === data.cardValue);
       if(hasCard) {
         game.drinkCounts[targetId] += 2;
@@ -185,7 +187,7 @@ io.on('connection', (socket) => {
         broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} clicked the wrong card! They drink! 🍺` });
       }
     } else {
-      // Logic for "admit bluff"
+      // Player clicked "admit bluff".
       game.drinkCounts[challengerId]++;
       broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} admitted bluffing! They drink! 🍺` });
     }
