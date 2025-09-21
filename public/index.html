@@ -549,8 +549,8 @@
     </div>
 
         <div class="scroll-widget" onclick = "openRules(event)">
-            <div id="rules-modal" class="modal">
-              <div class="modal-content">
+            <div id="rules-modal" class="modal" onclick="closeRules(event)">
+              <div class="modal-content" onclick="event.stopPropagation()">
                 <span class="close" onclick="closeRules(event)">&times;</span>
                 <pre id="rules-text">Loading...</pre>
               </div>
@@ -1178,7 +1178,7 @@
             }
         }
         function openRules(event) {
-            event.stopPropogation();
+            event.stopPropagation();
             const modal = document.getElementById("rules-modal");
             const textContainer = document.getElementById("rules.txt");
             fetch("rules.txt")
@@ -1200,7 +1200,7 @@
         }
 
         function closeRules(event) {
-            event.stopPropogation();
+            event.stopPropagation();
             document.getElementById("rules-modal").style.display = "none";
         }    
         
