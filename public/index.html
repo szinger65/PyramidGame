@@ -293,7 +293,6 @@
         #timer-display {
             display: none;
         }
-
         .modal {
             display: none;
             position: fixed;
@@ -306,7 +305,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .modal-content {
             background: #000000;
             color: white;
@@ -317,7 +315,11 @@
             width: 90%;
             z-index: 1100;
         }
-
+        .close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+        }
         .modal-buttons {
             display: flex;
             gap: 10px;
@@ -325,17 +327,14 @@
             margin-top: 15px;
             flex-wrap: wrap;
         }
-
         .accept-btn {
             background-color: #dc3545;
             color: white;
         }
-
         .challenge-btn {
             background-color: #f1c40f;
             color: black;
         }
-
         .target-player-btn {
             background-color: #f1c40f;
             color: white;
@@ -526,7 +525,13 @@
         </div>
     </div>
 
-        <div class="scroll-widget">
+        <div class="scroll-widget" onclick = "openRules()">
+            <div id="rules-modal" class="modal">
+              <div class="modal-content">
+                <span class="close" onclick="closeRules()">&times;</span>
+                <pre id="rules-text">Loading...</pre>
+              </div>
+            </div>
             <div class="scroll-icon">
                 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                     <defs>
@@ -1149,6 +1154,20 @@
                 }
             }
         }
+        function openRules() {
+            const modal = document.getElementById("rules-modal");
+            const textContainer = document.getElementById("rules.txt");
+            fetch("rules.txt")
+                .then(response => response.text())
+                .then(data => {
+                    textContainer.textContent = data;
+                    modal.style.display = "block";
+            })
+        }
+
+        function closeRules() {
+            document.getElementById("rules-modal").style.display = "none";
+        }    
         
         window.addEventListener('load', initSocket);
     </script>
