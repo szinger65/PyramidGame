@@ -1180,7 +1180,7 @@
         function openRules(event) {
             event.stopPropagation();
             const modal = document.getElementById("rules-modal");
-            const textContainer = document.getElementById("rules.txt");
+            const textContainer = document.getElementById("rules-txt");
             fetch("rules.txt")
                 .then(response => { 
                     if (!response.ok) {
