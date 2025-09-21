@@ -433,6 +433,29 @@
         .scroll-widget:hover .scroll-icon {
             transform: scale(1.15);
         }
+        .close {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #f1c40f;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #rules-text {
+            white-space: pre-wrap;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            text-align: left;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
@@ -525,10 +548,10 @@
         </div>
     </div>
 
-        <div class="scroll-widget" onclick = "openRules()">
+        <div class="scroll-widget" onclick = "openRules(event)">
             <div id="rules-modal" class="modal">
               <div class="modal-content">
-                <span class="close" onclick="closeRules()">&times;</span>
+                <span class="close" onclick="closeRules(event)">&times;</span>
                 <pre id="rules-text">Loading...</pre>
               </div>
             </div>
@@ -1154,18 +1177,30 @@
                 }
             }
         }
-        function openRules() {
+        function openRules(event) {
+            event.stopPropogation();
             const modal = document.getElementById("rules-modal");
             const textContainer = document.getElementById("rules.txt");
             fetch("rules.txt")
-                .then(response => response.text())
+                .then(response => { 
+                    if (!response.ok) {
+                        throw new Error("rules.txt file not found!");
+                    }
+                    return response.text();
+                })
                 .then(data => {
                     textContainer.textContent = data;
-                    modal.style.display = "block";
-            })
+                    modal.style.display = "flex";
+                })
+                .catch(error => {
+                    console.error("Error fetching rules:", error);
+                    textContainer.textContent = "Could not load rules";
+                    modal.style.display = "flex";
+                });
         }
 
-        function closeRules() {
+        function closeRules(event) {
+            event.stopPropogation();
             document.getElementById("rules-modal").style.display = "none";
         }    
         
