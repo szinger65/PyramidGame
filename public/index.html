@@ -456,12 +456,21 @@
             max-height: 60vh;
             overflow-y: auto;
         }
+        .rules {
+            position: fixed;
+            right: 20px;
+            bottom: 50px;
+            color: white;
+            font-size: 0.5rem;
+            margin: 20px 0;
+        }
     </style>
 </head>
 
 <body>
     <div id="menu-screen" class="screen active">
         <h1>Pyramid Card Game</h1>
+        <div class="rules" id="rules">Rules</div>
         <button onclick="showHostScreen()">Host New Game</button>
         <button onclick="showJoinScreen()">Join Game</button>
     </div>
@@ -547,7 +556,7 @@
             </div>
         </div>
     </div>
-
+        <div class="rules" id="rules">Rules</div>
         <div class="scroll-widget" onclick="openRules(event)">
             <div id="rules-modal" class="modal" onclick="closeRules(event)">
               <div class="modal-content" onclick="event.stopPropagation()">
