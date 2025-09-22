@@ -1,1 +1,6 @@
 Pyramid Game Rules
+Click "Deal Cards" to begin.
+Everyone starts with 4 cards face down in front of them. Once the host clicks "Start Memorizing" you will have 30 seconds to memorize your cards.
+The host will flip over the first card in the pyramid. If one of your 4 cards matches the pyramid card you have the option to make someone drink. If you have two of the same card you can make 2 people drink or the same person drink twice, same thing if you have 3 of the same card. You can also bluff, meaning even if you don't have the correct card you can still tell someone to drink. 
+The person that you told to drink will have two options : They can either take the drink, meaning they take one sip, or they can call your bluff. If someone calls your bluff and you were not bluffing you have to flip over the correct card in your deck of 4, if you flip over the wrong card you will have to take a sip. If you flip over the correct card the person who called your bluff will have to drink twice. If you were bluffing you can click the "admit bluff" button.
+Once the last card of the pyramid is flipped over, the recall phase begins. During the recall phase each player recites their cards in order, if you get the cards wrong you need to finish your whole drink.
