@@ -319,7 +319,7 @@ io.on('connection', (socket) => {
             if (hasCard) {
                 game.drinkCounts[targetId] += 2;
                 broadcastToGame(data.gameCode, 'challengeResult', {
-                    message: `${challengerName} had the card! ${targetName} drinks twice! 🍺`
+                    message: `${challengerName} has the card! ${targetName} drinks twice! 🍺`
                 });
             } else {
                 game.drinkCounts[challengerId]++;
