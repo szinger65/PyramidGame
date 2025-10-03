@@ -241,40 +241,73 @@ let socket = null;
             }
         }
 
+        // *** THE FIX IS HERE: Rewritten for multi-card proof logic ***
         function showCardFlipModal(requiredCardValue) {
             const prompt = document.getElementById('prove-card-prompt');
-            prompt.innerHTML = `
-                <strong>Prove you have a ${requiredCardValue}!</strong><br>
-                Click a card or <button>admit bluff</button>.
-            `;
-            prompt.style.display = 'block';
+            const myCardElements = document.querySelectorAll(`#${myPlayerId} .card`);
+            const myHandData = playerHands[myPlayerId] || [];
+
+            // Find all cards that match the required value
+            const matchingCardIndexes = [];
+            myHandData.forEach((card, index) => {
+                if (card.value === requiredCardValue) {
+                    matchingCardIndexes.push(index);
+                }
+            });
+
+            const requiredClicks = matchingCardIndexes.length;
+            let clicksMade = 0;
 
             const cleanup = () => {
                 prompt.style.display = 'none';
-                document.querySelectorAll(`#${myPlayerId} .card`).forEach(c => {
+                myCardElements.forEach(c => {
                     c.style.cursor = 'default';
                     c.onclick = null;
                 });
             };
+            if (requiredClicks === 0) {
+                prompt.innerHTML = `<strong>You don't have any ${requiredCardValue}s!</strong><br><button>Admit Bluff</button>`;
+                prompt.style.display = 'block';
+                prompt.querySelector('button').onclick = () => {
+                    cleanup();
+                    socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false });
+                };
+                return;
+            }
 
+            prompt.innerHTML = `<strong>Prove you have all ${requiredClicks} of your ${requiredCardValue}s!</strong> (${clicksMade}/${requiredClicks})<br><button>Admit Bluff</button>`;
+            prompt.style.display = 'block';
             prompt.querySelector('button').onclick = () => {
                 cleanup();
                 socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false });
             };
 
-            const myCardElements = document.querySelectorAll(`#${myPlayerId} .card`);
             myCardElements.forEach((cardEl, i) => {
                 cardEl.style.cursor = 'pointer';
                 cardEl.onclick = () => {
-                    const cardValueInHand = playerHands[myPlayerId][i].value;
-                    const proved = (cardValueInHand === requiredCardValue);
-                    cleanup();
-                    cardEl.classList.add('flipped');
-                    setTimeout(() => {
-                        socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: proved });
-                    }, 700);
+                    if (matchingCardIndexes.includes(i)) {
+                        cardEl.classList.add('flipped');
+                        cardEl.style.cursor = 'default';
+                        cardEl.onclick = null;
+                        clicksMade++;
+                        prompt.innerHTML = `<strong>Prove you have all ${requiredClicks} of your ${requiredCardValue}s!</strong> (${clicksMade}/${requiredClicks})<br><button>Admit Bluff</button>`;
+                        
+                        if (clicksMade === requiredClicks) {
+                            setTimeout(() => {
+                                cleanup();
+                                socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: true });
+                            }, 700);
+                        }
+                    } else {
+                        cardEl.classList.add('flipped');
+                        setTimeout(() => {
+                            cleanup();
+                            socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false });
+                        }, 700);
+                    }
                 };
             });
+        }
         }
 
         function flipPlayerCard(pId, cardValue) {
