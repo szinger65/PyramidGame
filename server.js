@@ -315,19 +315,10 @@ io.on('connection', (socket) => {
         const targetName = game.players[targetId]?.name;
 
         if (data.proved) {
-            const hasCard = game.playerHands[challengerId].some(c => c.value === data.cardValue);
-            if (hasCard) {
                 game.drinkCounts[targetId] += 2;
-                broadcastToGame(data.gameCode, 'challengeResult', {
-                    message: `${challengerName} has the card! ${targetName} drinks twice! 🍺`
-                });
+                broadcastToGame(data.gameCode, 'challengeResult', { 
+                  message: `${challengerName} proved it! ${targetName} drinks twice! 🍺`});
             } else {
-                game.drinkCounts[challengerId]++;
-                broadcastToGame(data.gameCode, 'challengeResult', {
-                    message: `${challengerName} chose the wrong card! They drink! 🍺`
-                });
-            }
-        } else {
             game.drinkCounts[challengerId]++;
             broadcastToGame(data.gameCode, 'challengeResult', {
                 message: `${challengerName} was bluffing! They drink! 🍺`
