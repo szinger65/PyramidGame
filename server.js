@@ -308,23 +308,26 @@ io.on('connection', (socket) => {
     socket.on('proveCard', (data) => {
         const game = games.get(data.gameCode);
         if (!game || !game.activeBluff) return;
-        
+
         const challengerId = socket.id;
         const { targetId } = game.activeBluff;
         const challengerName = game.players[challengerId]?.name;
         const targetName = game.players[targetId]?.name;
 
         if (data.proved) {
+            const hasCard = game.playerHands[challengerId].some(c => c.value === data.cardValue);
+            if(hasCard) {
                 game.drinkCounts[targetId] += 2;
-                broadcastToGame(data.gameCode, 'challengeResult', { 
-                  message: `${challengerName} proved it! ${targetName} drinks twice! 🍺`});
+                broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} proved it! ${targetName} drinks twice! 🍺🍺` });
             } else {
+                game.drinkCounts[challengerId]++;
+                broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} clicked the wrong card! They drink! 🍺` });
+            }
+        } else {
             game.drinkCounts[challengerId]++;
-            broadcastToGame(data.gameCode, 'challengeResult', {
-                message: `${challengerName} was bluffing! They drink! 🍺`
-            });
+            broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} admitted bluffing! They drink! 🍺` });
         }
-
+        
         game.activeBluff = null;
         broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
     });
