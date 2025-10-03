@@ -241,13 +241,11 @@ let socket = null;
             }
         }
 
-        // *** THE FIX IS HERE: Rewritten for multi-card proof logic ***
         function showCardFlipModal(requiredCardValue) {
             const prompt = document.getElementById('prove-card-prompt');
             const myCardElements = document.querySelectorAll(`#${myPlayerId} .card`);
             const myHandData = playerHands[myPlayerId] || [];
 
-            // Find all cards that match the required value
             const matchingCardIndexes = [];
             myHandData.forEach((card, index) => {
                 if (card.value === requiredCardValue) {
@@ -265,6 +263,7 @@ let socket = null;
                     c.onclick = null;
                 });
             };
+            
             if (requiredClicks === 0) {
                 prompt.innerHTML = `<strong>You don't have any ${requiredCardValue}s!</strong><br><button>Admit Bluff</button>`;
                 prompt.style.display = 'block';
@@ -291,7 +290,7 @@ let socket = null;
                         cardEl.onclick = null;
                         clicksMade++;
                         prompt.innerHTML = `<strong>Prove you have all ${requiredClicks} of your ${requiredCardValue}s!</strong> (${clicksMade}/${requiredClicks})<br><button>Admit Bluff</button>`;
-                        
+
                         if (clicksMade === requiredClicks) {
                             setTimeout(() => {
                                 cleanup();
@@ -307,7 +306,6 @@ let socket = null;
                     }
                 };
             });
-        }
         }
 
         function flipPlayerCard(pId, cardValue) {
