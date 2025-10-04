@@ -55,6 +55,13 @@
     </div>
 
     <div id="game-screen" class="screen">
+        <div id="chat-widget">
+            <div id="chat-messages"></div>
+            <form id="chat-form" onsubmit="sendChatMessage(event)">
+                <input type="text" id="chat-input" placeholder="Send a message..." autocomplete="off">
+            </form>
+        </div>
+    </div>
         <div id="game-controls">
             <div id="current-turn">Setting Up...</div>
             <div id="phase-display">Phase: Setup</div>
@@ -76,14 +83,6 @@
             </div>
         </div>
         <div id="connection-status" class="connection-status disconnected">...</div>
-    </div>
-
-    <div id="chat-widget">
-            <div id="chat-messages"></div>
-            <form id="chat-form" onsubmit="sendChatMessage(event)">
-                <input type="text" id="chat-input" placeholder="Send a message..." autocomplete="off">
-            </form>
-        </div>
     </div>
 
     <div id="target-modal" class="modal">
