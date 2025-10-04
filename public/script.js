@@ -66,7 +66,6 @@ let socket = null;
 
             socket.on('proveYourCard', (data) => showCardFlipModal(data.cardValue));
             socket.on('beginRecallTurn', (data) => showCardRecallInput(data.playerIndex));
-        }
                 socket.on('newChatMessage', (data) => {
                         const messagesContainer = document.getElementById('chat-messages');
                         const messageElement = document.createElement('div');
