@@ -363,6 +363,18 @@ io.on('connection', (socket) => {
 
         broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
     });
+    
+    socket.on('chatMessage', (data) => {
+        const game = games.get(data.gameCode);
+        if (!game) return;
+
+        const senderName = game.players[socket.id]?.name || 'Spectator';
+
+        broadcastToGame(data.gameCode, 'newChatMessage', {
+            sender: senderName,
+            message: data.message
+        });
+    });
 
     socket.on('disconnect', () => {
         console.log(`Player disconnected: ${socket.id}`);
