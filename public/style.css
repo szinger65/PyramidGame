@@ -315,19 +315,38 @@ body {
             align-items: center;
         }
         .modal-content {
-            background: #000000;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 400px;
+            background-color: #f0f0f0;
+            color: #1a1a1a;
+            padding: 25px;
+            padding-top: 50px;
+            border: 4px solid #1a1a1a;
+            border-radius: 8px;
             width: 90%;
-            z-index: 1100;
+            max-width: 450px;
+            position: relative;
+            box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.5);
+            transform: rotate(-3deg);
+            text-align: left;
         }
+
+        .modal-content::before {
+            content: 'RULES';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-3deg);
+            background-color: #e44d26;
+            color: white;
+            padding: 8px 25px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 5px;
+            border: 4px solid #1a1a1a;
+            letter-spacing: 2px;
+        }
+
         .close {
-            float: right;
-            font-size: 24px;
-            cursor: pointer;
+            display: none;
         }
         .modal-buttons {
             display: flex;
