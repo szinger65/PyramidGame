@@ -492,3 +492,47 @@ body {
             font-size: 1rem;
             margin: 20px 0;
         }
+        #chat-widget {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            width: 280px;
+            height: 300px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            border: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            z-index: 1900;
+        }
+        #chat-messages {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column-reverse;
+        .chat-message {
+            margin-bottom: 8px;
+            padding: 5px 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            word-wrap: break-word;
+        }
+        .sender-name {
+            font-weight: bold;
+            color: #f1c40f;
+            margin-right: 5px;
+        }
+        #chat-form {
+            padding: 5px;
+            display: flex;
+        }
+        #chat-input {
+            flex-grow: 1;
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 0;
+        }
