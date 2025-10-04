@@ -67,6 +67,21 @@ let socket = null;
             socket.on('proveYourCard', (data) => showCardFlipModal(data.cardValue));
             socket.on('beginRecallTurn', (data) => showCardRecallInput(data.playerIndex));
         }
+                socket.on('newChatMessage', (data) => {
+                        const messagesContainer = document.getElementById('chat-messages');
+                        const messageElement = document.createElement('div');
+                        messageElement.classList.add('chat-message');
+                        
+                        const senderSpan = document.createElement('span');
+                        senderSpan.classList.add('sender-name');
+                        senderSpan.textContent = data.sender;
+                        
+                        messageElement.appendChild(senderSpan);
+                        messageElement.append(data.message);
+                        
+                        messagesContainer.prepend(messageElement);
+                    });
+                }
 
         function showMenuScreen() {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -648,5 +663,19 @@ let socket = null;
             event.stopPropagation();
             document.getElementById("rules-modal").style.display = "none";
         }    
+
+        function sendChatMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value;
+            
+            if (message.trim()) {
+                socket.emit('chatMessage', {
+                    gameCode: gameCode,
+                    message: message
+                });
+                input.value = '';
+            }
+        }
         
         window.addEventListener('load', initSocket);
