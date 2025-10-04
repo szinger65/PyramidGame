@@ -511,6 +511,7 @@ body {
             overflow-y: auto;
             display: flex;
             flex-direction: column-reverse;
+        }
         .chat-message {
             margin-bottom: 8px;
             padding: 5px 8px;
