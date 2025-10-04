@@ -625,6 +625,10 @@ let socket = null;
             event.stopPropagation();
             const modal = document.getElementById("rules-modal");
             const textContainer = document.getElementById("rules-text");
+            
+            textContainer.textContent = "Loading Rules...";
+            modal.style.display = "flex"; 
+
             fetch("rules.txt")
                 .then(response => { 
                     if (!response.ok) {
@@ -634,12 +638,10 @@ let socket = null;
                 })
                 .then(data => {
                     textContainer.textContent = data;
-                    modal.style.display = "flex";
                 })
                 .catch(error => {
                     console.error("Error fetching rules:", error);
-                    textContainer.textContent = "Could not load rules";
-                    modal.style.display = "flex";
+                    textContainer.textContent = "Could not load rules. Make sure 'rules.txt' is in the public folder.";
                 });
         }
         function closeRules(event) {
