@@ -550,7 +550,7 @@ body {
         }
         #rules-text {
             white-space: pre-wrap;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Comic Sans MS', cursive, monospace;
             font-size: 0.9rem;
             text-align: left;
             max-height: 60vh;
