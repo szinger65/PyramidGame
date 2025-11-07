@@ -16,6 +16,21 @@ body {
             background-position: center;
             background-repeat: no-repeat;
         }
+        #menu-screen h1 {
+            font-family: 'Alfa Slab One', cursive;
+            font-size: 6rem;
+            color: #C92121;
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1.1;
+            text-shadow: 
+            1px 1px 0px rgba(255, 255, 255, 0.4), 
+            -2px -2px 0 #000,  
+            2px -2px 0 #000,
+            -2px  2px 0 #000,
+            2px  2px 0 #000,
+            6px 6px 8px rgba(0,0,0,0.6);
+        }
         #host-screen {
             background-image: url('image/background.jpg');
             background-size: cover;
