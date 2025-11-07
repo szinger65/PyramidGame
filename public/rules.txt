@@ -1,6 +1,65 @@
-Pyramid Game Rules
-1) Click "Deal Cards" to begin.
-2) Everyone starts with 4 cards face down in front of them. Once the host clicks "Start Memorizing" you will have 30 seconds to memorize your cards.
-3) The host will flip over the first card in the pyramid. If one of your 4 cards matches the pyramid card you have the option to make someone drink. If you have two of the same card you can make 2 people drink or the same person drink twice, same thing if you have 3 of the same card. You can also bluff, meaning even if you don't have the correct card you can still tell someone to drink. 
-4) The person that you told to drink will have two options : They can either take the drink, meaning they take one sip, or they can call your bluff. If someone calls your bluff and you were not bluffing you have to flip over the correct card in your deck of 4, if you flip over the wrong card you will have to take a sip. If you flip over the correct card the person who called your bluff will have to drink twice. If you were bluffing you can click the "admit bluff" button.
-5) Once the last card of the pyramid is flipped over, the recall phase begins. During the recall phase each player recites their cards in order, if you get the cards wrong you need to finish your whole drink.
+======================================
+PYRAMID GAME - RULES
+======================================
+
+OBJECTIVE:
+Drink
+
+---
+
+PHASE 1: SETUP & MEMORIZATION
+-----------------------------
+
+1. DEAL THE CARDS: The host deals a pyramid of cards face down (e.g., a 6-5-4-3-2-1 pyramid).
+
+2. PLAYER HANDS: Each player receives four cards, dealt face down in a row in front of them.
+
+3. MEMORIZE: When the host says to begin, all players have 30 SECONDS to secretly look at and memorize their own four cards. After 30 seconds, all cards must be placed face down again. Do not look at them again until required!
+
+---
+
+PHASE 2: PLAYING THROUGH THE PYRAMID
+------------------------------------
+
+The host flips over the pyramid cards one by one, starting from the bottom row. After each card is flipped, the following happens:
+
+1. GIVING A DRINK
+-----------------
+- Anyone who claims to have a card matching the RANK (e.g., 7, Queen, Ace) of the flipped card can tell another player to drink.
+- ONE MATCH: If you have one matching card, you can give out one drink.
+- MULTIPLE MATCHES: For each matching card you have, you can assign one drink. (e.g., two Jacks lets you give out two drinks).
+- BLUFFING: You can BLUFF at any time by telling someone to drink even if you don't have a matching card.
+
+2. RECEIVING A DRINK
+--------------------
+If another player tells you to drink, you have two choices:
+
+A) ACCEPT THE DRINK: You take one sip. The game moves on.
+
+B) CALL THEIR BLUFF: You challenge the player. This starts a showdown.
+
+3. THE SHOWDOWN (Outcomes of a Bluff Call)
+-------------------------------------------
+- IF THE ACCUSER WAS TELLING THE TRUTH:
+  - They must prove it by flipping over the correct matching card from their hand.
+  - SUCCESS: If they reveal the correct card, the challenger who called the bluff must drink TWICE. The accuser then flips their card back face down.
+  - FAILURE: If they flip over the WRONG card from their hand (forgetting its position), the accuser must take one drink as a penalty.
+
+- IF THE ACCUSER WAS BLUFFING:
+  - They must admit their bluff.
+  - PENALTY: The accuser must DRINK THE DRINK they were trying to give away.
+
+Play continues until every card in the pyramid has been flipped.
+
+---
+
+PHASE 3: THE FINAL RECALL
+-------------------------
+
+1. RECITE YOUR HAND: Going in a circle, each player must try to recite their original four cards in the correct order (left to right).
+
+2. THE PENALTY: For every card a player gets wrong, they must take a drink. If a player gets all of their cards wrong, they must FINISH THEIR ENTIRE DRINK.
+
+---
+
+After the recall, the game is over. Shuffle and play again!
