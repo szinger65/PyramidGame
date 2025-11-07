@@ -50,7 +50,6 @@ body {
             width: 100%;
             height: 100%;
         }
-
         #menu-screen,
         #host-screen,
         #join-screen {
@@ -85,20 +84,45 @@ body {
             border: 1px solid #ccc;
             width: 200px;
         }
-
         button {
-            background-color: #f1c40f;
+            font-size: 1rem;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 6px;
+            border: none;
             font-weight: bold;
             cursor: pointer;
             min-width: 120px;
-        }
-
+       }
         button:disabled {
             background-color: #666;
             cursor: not-allowed;
         }
-
-        .connection-info {
+        #menu-screen button {
+            background-color: #222;
+            background-image: linear-gradient(to bottom, #4a4a4a, #1a1a1a);
+            color: white;
+            font-size: 1.2rem;
+            padding: 15px 30px;
+            border-radius: 8px;
+            border-top: 1px solid #666;
+            border-bottom: 1px solid #000;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            box-shadow: 
+            inset 0 1px 0 rgba(255, 255, 255, 0.15),
+            0 5px 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.1s ease-in-out; /* Smooth transition for clicks */
+         }
+         #menu-screen button:hover {
+            background-image: linear-gradient(to bottom, #5e5e5e, #2b2b2b);
+         }
+         #menu-screen button:active {
+            box-shadow: 
+            inset 0 2px 2px rgba(0, 0, 0, 0.4), /* Deeper inner shadow */
+            0 2px 5px rgba(0, 0, 0, 0.3); /* Smaller drop shadow */
+            transform: translateY(2px); /* Push the button down slightly */
+         }
+         .connection-info {
             background: rgba(52, 152, 219, 0.2);
             border: 1px solid #3498db;
             border-radius: 8px;
@@ -106,7 +130,6 @@ body {
             margin: 20px 0;
             text-align: center;
         }
-
         .game-code {
             font-size: 1.5rem;
             font-weight: bold;
@@ -114,7 +137,6 @@ body {
             margin: 10px 0;
             letter-spacing: 3px;
         }
-
         .players-list {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
@@ -122,7 +144,6 @@ body {
             margin: 20px 0;
             min-height: 100px;
         }
-
         .player-item {
             display: flex;
             align-items: center;
@@ -132,15 +153,12 @@ body {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 6px;
         }
-
         .player-item.is-host {
             border: 2px solid #f1c40f;
         }
-
         .player-item.is-you {
             border: 2px solid #3498db;
         }
-
         .status-indicator {
             width: 12px;
             height: 12px;
