@@ -254,11 +254,11 @@ border-radius: 8px;
 
 .player.current-user {
 background-color: rgba(52, 152, 219, 0.3);
-border: 2px solid #3498db;
+border: 2px solid #C92121;
 }
 
 .player.is-host {
-border-color: #f1c40f;
+border-color: #C92121;
 }
 
 .player-header {
