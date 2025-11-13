@@ -160,7 +160,7 @@ transform: translateY(2px); /* Push the button down slightly */
 }
 .connection-info {
 background: rgba(255, 255, 255, 0.1);
-border: 1px solid #3498db;
+border: 1px solid #ff0000;
 border-radius: 8px;
 padding: 15px;
 margin: 20px 0;
@@ -169,7 +169,7 @@ text-align: center;
 .game-code {
 font-size: 1.5rem;
 font-weight: bold;
-color: #f1c40f;
+color: #ff0000;
 margin: 10px 0;
 letter-spacing: 3px;
 }
