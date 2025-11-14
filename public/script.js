@@ -343,7 +343,7 @@ let socket = null;
                     <div class="modal-content-1">
                         <h3>Recite your cards!</h3>
                         <p>Enter values (e.g., "A 5 K 2"):</p>
-                        <input type="text" id="card-recall-input" style="width: 80%;">
+                        <input type="text" id="card-recall-input" style="width: 100%;">
                         <div class="modal-buttons">
                             <button class="challenge-btn">Submit</button>
                         </div>
