@@ -369,7 +369,7 @@ let socket = null;
         function handleCardRecallResult(data) {
             const message = data.correct ? 
                 `${data.playerName} was correct!` : 
-                `${data.playerName} was wrong!`;
+                `${data.playerName} was wrong! ${data.playerName} must finish their entire drink`;
             showGameMessage(message, 2500);
         }
         
