@@ -614,7 +614,7 @@ let socket = null;
                     if (isHost) {
                         const btn = document.createElement('button');
                         btn.id = 'restart-btn';
-                        btn.textContent = 'Restart Game';
+                        btn.textContent = 'Next Round';
                         btn.style.backgroundColor = '#27ae60';
                         btn.style.color = 'white';
                         btn.onclick = () => socket.emit('gameAction', { gameCode, action: 'restartGame' });
