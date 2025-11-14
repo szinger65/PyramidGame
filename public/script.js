@@ -372,8 +372,6 @@ let socket = null;
                 `${data.playerName} was wrong! ${data.playerName} must finish their entire drink`;
             showGameMessage(message, 2500);
         }
-        
-        //const numPeople = document.getElementById("num-people");
 
         function makeSomeoneDrink() {
             if (!gameState.currentPyramidCard) {
@@ -382,7 +380,7 @@ let socket = null;
         
             const modal = document.getElementById('target-modal');
             const buttons = document.getElementById('target-buttons');
-            const message = document.getElementById('target-message');
+            const message = document.getElementById('num-people');
             buttons.innerHTML = '';
         
             const myHand = playerHands[myPlayerId] || [];
