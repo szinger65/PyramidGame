@@ -373,62 +373,48 @@ let socket = null;
             showGameMessage(message, 2500);
         }
         
-        const numPeople = document.getElementById("num-people");
+        //const numPeople = document.getElementById("num-people");
 
         function makeSomeoneDrink() {
-                    if (!gameState.currentPyramidCard) {
-                        return showGameMessage("Wait for a card!");
-                    }
-                    
-                    const modal = document.getElementById('target-modal');
-                    const buttons = document.getElementById('target-buttons');
-                    buttons.innerHTML = '';
+            if (!gameState.currentPyramidCard) {
+                return showGameMessage("Wait for a pyramid card to be flipped!");
+            }
         
-                    const myHandData = playerHands[myPlayerId] || [];
-                    const matchingCardIndexes = [];
-                    myHandData.forEach((card, index) => {
-                        if (card.value === data.cardValue) {
-                            matchingCardIndexes.push(index);
-                        }
+            const modal = document.getElementById('target-modal');
+            const buttons = document.getElementById('target-buttons');
+            const message = document.getElementById('target-message');
+            buttons.innerHTML = '';
+        
+            const myHand = playerHands[myPlayerId] || [];
+            const currentCardValue = gameState.currentPyramidCard;
+            const matchingCardsCount = myHand.filter(card => card.value === currentCardValue).length;
+            const drinksToGive = (matchingCardsCount === 0) ? 1 : matchingCardsCount;
+        
+            message.textContent = `You can give out ${drinksToGive} drink(s). Choose a player.`;
+            players.filter(p => p !== myPlayerId).forEach(targetId => {
+                const btn = document.createElement('button');
+                btn.className = 'target-player-btn';
+                btn.textContent = playerNames[players.indexOf(targetId)];
+                btn.onclick = () => {
+                    socket.emit('challenge', {
+                        gameCode,
+                        challengerId: myPlayerId,
+                        targetId,
+                        cardValue: currentCardValue
                     });
+                    modal.style.display = 'none';
+                };
+                buttons.appendChild(btn);
+            });
         
-                    const requiredClicks = matchingCardIndexes.length;
-                    let i = 0;
-                    if (requiredClicks === 0) {
-                        i += 1;
-                    } else if (requiredClicks === 1) {
-                        i += 1;
-                    } else if (requiredClicks === 2) {
-                        i += 2;
-                    } else if (requiredClicks === 3) {
-                        i += 3;
-                    }
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'cancel-btn';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.onclick = () => modal.style.display = 'none';
+            buttons.appendChild(cancelBtn);
         
-                    
-                    players.filter(p => p !== myPlayerId).forEach(targetId => {
-                        const btn = document.createElement('button');
-                        btn.className = 'target-player-btn';
-                        btn.textContent = playerNames[players.indexOf(targetId)];
-                        let inc = i;
-                        for (let x = 0; x<i; x++) {
-                            numPeople.textContent = `You can challenge ${inc} people`;
-                            btn.onclick = () => {
-                                socket.emit('challenge', { gameCode, challengerId: myPlayerId, targetId });
-                                modal.style.display = 'none';
-                            };
-                            inc -= 1;
-                        }
-                        buttons.appendChild(btn);
-                    });
-                    
-                    const cancelBtn = document.createElement('button');
-                    cancelBtn.className = 'cancel-btn';
-                    cancelBtn.textContent = 'Cancel';
-                    cancelBtn.onclick = () => modal.style.display = 'none';
-                    buttons.appendChild(cancelBtn);
-                    
-                    modal.style.display = 'flex';
-                }
+            modal.style.display = 'flex';
+        }
 
         function receiveChallenge(data) {
             if (data.targetId === myPlayerId) {
