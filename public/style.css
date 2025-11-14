@@ -429,11 +429,11 @@ background-color: #dc3545;
 color: white;
 }
 .challenge-btn {
-background-color: #f1c40f;
+background-color: #0f5206;
 color: black;
 }
 .target-player-btn {
-background-color: #f1c40f;
+background-color: #0f5206;
 color: white;
 margin: 5px;
 min-width: 120px;
@@ -458,7 +458,7 @@ font-weight: bold;
 z-index: 1500;
 text-align: center;
 max-width: 400px;
-border: 2px solid #f1c40f;
+border: 2px solid #C92121;
 display: none;
 animation: fadeIn 0.3s ease-in;
 }
@@ -502,7 +502,7 @@ margin: 2px;
 .prove-prompt {
 margin-top: 15px;
 padding: 10px;
-background-color: #ffc107;
+background-color: #dc3545;
 color: black;
 border-radius: 6px;
 text-align: center;
@@ -590,7 +590,7 @@ word-wrap: break-word;
 }
 .sender-name {
 font-weight: bold;
-color: #f1c40f;
+color: #C92121;
 margin-right: 5px;
 }
 #chat-form {
