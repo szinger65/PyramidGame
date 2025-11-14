@@ -449,7 +449,7 @@ letter-spacing: 2px;
 }
 
 .modal-content-1::before {
-content: 'MAKE A CHOICE';
+content: 'DECIDE';
 position: absolute;
 top: -25px;
 left: 50%;
