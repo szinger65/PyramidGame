@@ -380,7 +380,7 @@ let socket = null;
         
             const modal = document.getElementById('target-modal');
             const buttons = document.getElementById('target-buttons');
-            const message = document.getElementById('num-people');
+            const message = document.getElementById('target-message');
             buttons.innerHTML = '';
         
             const myHand = playerHands[myPlayerId] || [];
