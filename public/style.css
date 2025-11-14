@@ -10,6 +10,7 @@ align-items: center;
 height: 100vh;
 overflow: hidden;
 }
+
 #menu-screen {
 background-image: url('image/background.jpg');
 background-size: cover;
@@ -395,6 +396,7 @@ z-index: 1000;
 justify-content: center;
 align-items: center;
 }
+
 .modal-content {
 background-color: #f0f0f0;
 color: #1a1a1a;
@@ -421,8 +423,29 @@ position: relative;
 box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.5);
 text-align: left;
 }
+
+.modal-content-1 h3 {
+text-align: center;
+}
+
 .modal-content::before {
 content: 'RULES';
+position: absolute;
+top: -25px;
+left: 50%;
+transform: translateX(-50%);
+background-color: #e44d26;
+color: white;
+padding: 8px 25px;
+font-size: 1.5rem;
+font-weight: bold;
+border-radius: 5px;
+border: 4px solid #1a1a1a;
+letter-spacing: 2px;
+}
+
+.modal-content-1::before {
+content: 'MAKE A CHOICE';
 position: absolute;
 top: -25px;
 left: 50%;
@@ -453,7 +476,7 @@ color: white;
 }
 .challenge-btn {
 background-color: #0f5206;
-color: black;
+color: white;
 }
 .target-player-btn {
 background-color: #0f5206;
