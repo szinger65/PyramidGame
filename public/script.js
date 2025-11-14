@@ -288,7 +288,7 @@ let socket = null;
                 return;
             }
 
-            prompt.innerHTML = `<strong>Prove you have all ${requiredClicks} of your ${requiredCardValue}s!</strong> (${clicksMade}/${requiredClicks})<br><button>Admit Bluff</button>`;
+            prompt.innerHTML = `<strong>Prove you have ${requiredClicks} ${requiredCardValue}!</strong> (${clicksMade}/${requiredClicks})<br><button>Admit Bluff</button>`;
             prompt.style.display = 'block';
             prompt.querySelector('button').onclick = () => {
                 cleanup();
