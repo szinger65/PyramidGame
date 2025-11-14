@@ -303,7 +303,7 @@ let socket = null;
                         cardEl.style.cursor = 'default';
                         cardEl.onclick = null;
                         clicksMade++;
-                        prompt.innerHTML = `<strong>Prove you have all ${requiredClicks} of your ${requiredCardValue}s!</strong> (${clicksMade}/${requiredClicks})<br><button>Admit Bluff</button>`;
+                        prompt.innerHTML = `<strong>Prove you have ${requiredClicks} ${requiredCardValue}!</strong> (${clicksMade}/${requiredClicks})<br><button>Admit Bluff</button>`;
 
                         if (clicksMade === requiredClicks) {
                             setTimeout(() => {
