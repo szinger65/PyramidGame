@@ -337,10 +337,10 @@ let socket = null;
         function showCardRecallInput(playerIndex) {
             if (players[playerIndex] === myPlayerId) {
                 const modal = document.createElement('div');
-                modal.className = 'modal';
+                modal.className = 'modal-1';
                 modal.style.display = 'flex';
                 modal.innerHTML = `
-                    <div class="modal-content">
+                    <div class="modal-content-1">
                         <h3>Recite your cards!</h3>
                         <p>Enter values (e.g., "A 5 K 2"):</p>
                         <input type="text" id="card-recall-input" style="width: 80%;">
