@@ -428,6 +428,10 @@ text-align: left;
 text-align: center;
 }
 
+.modal-content-1 p {
+text-align: center;
+}
+
 .modal-content::before {
 content: 'RULES';
 position: absolute;
