@@ -384,7 +384,7 @@ let socket = null;
             }
         
             const myHand = playerHands[myPlayerId] || [];
-            const currentCardValue = gameState.currentPyramidCard;
+            const currentCardValue = gameState.currentPyramidCard.replace(/[♠♥♦♣]/g, '');
             const matchingCardsCount = myHand.filter(card => card.value === currentCardValue).length;
             let drinksRemaining = (matchingCardsCount === 0) ? 1 : matchingCardsCount;
         
