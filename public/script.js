@@ -374,42 +374,54 @@ let socket = null;
         }
 
         function makeSomeoneDrink() {
-            if (!gameState.currentPyramidCard) {
-                return showGameMessage("Wait for a pyramid card to be flipped!");
-            }
-        
             const modal = document.getElementById('target-modal');
-            const buttons = document.getElementById('target-buttons');
-            const message = document.getElementById('target-message');
-            buttons.innerHTML = '';
+            const buttonsContainer = document.getElementById('target-buttons');
+            const messageElement = document.getElementById('target-message');
+            buttonsContainer.innerHTML = '';
+        
+            if (!gameState.currentPyramidCard) {
+                return showGameMessage("Wait for a card to be flipped!");
+            }
         
             const myHand = playerHands[myPlayerId] || [];
             const currentCardValue = gameState.currentPyramidCard;
             const matchingCardsCount = myHand.filter(card => card.value === currentCardValue).length;
-            const drinksToGive = (matchingCardsCount === 0) ? 1 : matchingCardsCount;
+            let drinksRemaining = (matchingCardsCount === 0) ? 1 : matchingCardsCount;
         
-            message.textContent = `You can give out ${drinksToGive} drink(s). Choose a player.`;
-            players.filter(p => p !== myPlayerId).forEach(targetId => {
+            messageElement.textContent = `You have ${drinksRemaining} drink(s) to give.`;
+        
+            players.filter(pId => pId !== myPlayerId).forEach(targetId => {
                 const btn = document.createElement('button');
                 btn.className = 'target-player-btn';
                 btn.textContent = playerNames[players.indexOf(targetId)];
+        
                 btn.onclick = () => {
+                    if (drinksRemaining <= 0) return;
+        
                     socket.emit('challenge', {
                         gameCode,
                         challengerId: myPlayerId,
                         targetId,
                         cardValue: currentCardValue
                     });
-                    modal.style.display = 'none';
+        
+                    drinksRemaining--;
+                    messageElement.textContent = `You have ${drinksRemaining} drink(s) to give.`;
+        
+                    if (drinksRemaining === 0) {
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                        }, 500);
+                    }
                 };
-                buttons.appendChild(btn);
+                buttonsContainer.appendChild(btn);
             });
         
             const cancelBtn = document.createElement('button');
             cancelBtn.className = 'cancel-btn';
-            cancelBtn.textContent = 'Cancel';
+            cancelBtn.textContent = 'Done';
             cancelBtn.onclick = () => modal.style.display = 'none';
-            buttons.appendChild(cancelBtn);
+            buttonsContainer.appendChild(cancelBtn);
         
             modal.style.display = 'flex';
         }
