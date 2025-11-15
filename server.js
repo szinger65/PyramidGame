@@ -354,6 +354,15 @@ io.on('connection', (socket) => {
 
         broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
     });
+  
+    socket.on('playerFlippingCard', (data) => {
+    const game = games.get(data.gameCode);
+    if (!game) return;
+        socket.to(data.gameCode).emit('cardWasFlipped', {
+            playerId: data.playerId,
+            cardIndex: data.cardIndex
+        });
+    });
 
     socket.on('verifyCardRecall', (data) => {
         const game = games.get(data.gameCode);
