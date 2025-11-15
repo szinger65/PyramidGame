@@ -63,6 +63,15 @@ let socket = null;
                     flipPlayerCard(data.reveal.playerId, data.reveal.cardValue);
                 }
             });
+            socket.on('cardWasFlipped', (data) => {
+                    const playerCardElements = document.querySelectorAll(`#${data.playerId} .card`);
+                    if (playerCardElements && playerCardElements[data.cardIndex]) {
+                        const cardToFlip = playerCardElements[data.cardIndex];
+                        if (!cardToFlip.classList.contains('flipped')) {
+                            cardToFlip.classList.add('flipped');
+                     }
+                }
+            });
 
             socket.on('proveYourCard', (data) => showCardFlipModal(data.cardValue));
             socket.on('beginRecallTurn', (data) => showCardRecallInput(data.playerIndex));
