@@ -307,7 +307,7 @@ io.on('connection', (socket) => {
 
         } else if (data.response === 'challenge') {
             broadcastToGame(data.gameCode, 'challengeResult', {
-                message: `${targetName} calls ${challengerName}'s bluff! (${numChallenges} drinks on the line)`
+                message: `${targetName} calls ${challengerName}'s bluff!`
             });
 
             game.activeChallenges.forEach(c => {
@@ -344,7 +344,7 @@ io.on('connection', (socket) => {
         } else {
             game.drinkCounts[challengerId] += drinksAtStake;
             broadcastToGame(data.gameCode, 'challengeResult', {
-                message: `${challengerName} failed the challenge! They drink ${drinksAtStake} time(s)! 🍺`
+                message: `${challengerName} failed to flip the correct cards! They drink ${drinksAtStake} time(s)! 🍺`
             });
         }
 
