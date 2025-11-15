@@ -69,7 +69,7 @@ function createGame(hostId, hostName) {
         pyramidCards: [],
         currentPyramidCard: null,
         flipIndex: 0,
-        activeBluff: null,
+        activeChallenges: [],
         currentRecallPlayerIndex: 0
     };
 
@@ -268,36 +268,55 @@ io.on('connection', (socket) => {
         const game = games.get(data.gameCode);
         if (!game) return;
         
-        game.activeBluff = {
+        game.activeChallenges.push({
             challengerId: data.challengerId,
-            targetId: data.targetId
-        };
+            targetId: data.targetId,
+            cardValue: data.cardValue
+        });
         
         broadcastToGame(data.gameCode, 'challengeReceived', data);
     });
 
     socket.on('challengeResponse', (data) => {
         const game = games.get(data.gameCode);
-        if (!game || !game.activeBluff) return;
-        
-        const { challengerId, targetId } = game.activeBluff;
+        if (!game) return;
+
+        const responderId = socket.id;
+        const activeChallenge = game.activeChallenges.find(c => c.targetId === responderId);
+        if (!activeChallenge) return;
+
+        const { challengerId, targetId } = activeChallenge;
         const challengerName = game.players[challengerId]?.name;
         const targetName = game.players[targetId]?.name;
 
+        const challengesToResolve = game.activeChallenges.filter(
+            c => c.challengerId === challengerId && c.targetId === targetId
+        );
+        const numChallenges = challengesToResolve.length;
+
         if (data.response === 'accept') {
-            game.drinkCounts[targetId]++;
+            game.drinkCounts[targetId] += numChallenges;
             broadcastToGame(data.gameCode, 'challengeResult', {
-                message: `${targetName} chooses to take the drink! 🍺`
+                message: `${targetName} takes ${numChallenges} drink(s)! 🍺`
             });
-            game.activeBluff = null;
-            broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
             
+            game.activeChallenges = game.activeChallenges.filter(
+                c => !(c.challengerId === challengerId && c.targetId === targetId)
+            );
+            broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
+
         } else if (data.response === 'challenge') {
             broadcastToGame(data.gameCode, 'challengeResult', {
-                message: `${targetName} calls ${challengerName}'s bluff!`
+                message: `${targetName} calls ${challengerName}'s bluff! (${numChallenges} drinks on the line)`
+            });
+
+            game.activeChallenges.forEach(c => {
+                if (c.challengerId === challengerId && c.targetId === targetId) {
+                    c.drinksAtStake = numChallenges;
+                }
             });
             
-            const cardValue = game.currentPyramidCard.replace(/[♠♥♦♣]/g, '');
+            const cardValue = activeChallenge.cardValue.replace(/[♠♥♦♣]/g, '');
             const challengerSocket = playerSockets.get(challengerId);
             if (challengerSocket) {
                 challengerSocket.emit('proveYourCard', { cardValue });
@@ -307,28 +326,32 @@ io.on('connection', (socket) => {
 
     socket.on('proveCard', (data) => {
         const game = games.get(data.gameCode);
-        if (!game || !game.activeBluff) return;
+        if (!game) return;
 
         const challengerId = socket.id;
-        const { targetId } = game.activeBluff;
+        const activeChallenge = game.activeChallenges.find(c => c.challengerId === challengerId);
+        if (!activeChallenge || !activeChallenge.drinksAtStake) return;
+
+        const { targetId, drinksAtStake } = activeChallenge;
         const challengerName = game.players[challengerId]?.name;
         const targetName = game.players[targetId]?.name;
 
         if (data.proved) {
-            const hasCard = game.playerHands[challengerId].some(c => c.value === data.cardValue);
-            if(hasCard) {
-                game.drinkCounts[targetId] += 2;
-                broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} proved it! ${targetName} drinks twice! 🍺🍺` });
-            } else {
-                game.drinkCounts[challengerId]++;
-                broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} clicked the wrong card! They drink! 🍺` });
-            }
+            game.drinkCounts[targetId] += (drinksAtStake * 2);
+            broadcastToGame(data.gameCode, 'challengeResult', {
+                message: `${challengerName} proved it! ${targetName} drinks ${drinksAtStake * 2} times! 🍺🍺`
+            });
         } else {
-            game.drinkCounts[challengerId]++;
-            broadcastToGame(data.gameCode, 'challengeResult', { message: `${challengerName} admitted bluffing! They drink! 🍺` });
+            game.drinkCounts[challengerId] += drinksAtStake;
+            broadcastToGame(data.gameCode, 'challengeResult', {
+                message: `${challengerName} failed the challenge! They drink ${drinksAtStake} time(s)! 🍺`
+            });
         }
-        
-        game.activeBluff = null;
+
+        game.activeChallenges = game.activeChallenges.filter(
+            c => !(c.challengerId === challengerId && c.targetId === targetId)
+        );
+
         broadcastToGame(data.gameCode, 'gameStateUpdate', { gameState: getGameState(game) });
     });
 
