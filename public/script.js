@@ -300,10 +300,11 @@ let socket = null;
                 cardEl.onclick = () => {
                     if (matchingCardIndexes.includes(i)) {
                         cardEl.classList.add('flipped');
+                        socket.emit('playerFlippingCard', { gameCode, playerId: myPlayerId, cardIndex: i });
                         cardEl.style.cursor = 'default';
                         cardEl.onclick = null;
                         clicksMade++;
-                        prompt.innerHTML = `<strong>Prove you have ${requiredClicks} ${requiredCardValue}!</strong> (${clicksMade}/${requiredClicks})<br><button>Admit Bluff</button>`;
+                        prompt.innerHTML = `<strong>Prove you have ${requiredClicks} ${requiredCardValue}(s)!</strong> (${clicksMade}/${requiredClicks})<br><button>Admit Bluff</button>`;
 
                         if (clicksMade === requiredClicks) {
                             setTimeout(() => {
@@ -313,6 +314,7 @@ let socket = null;
                         }
                     } else {
                         cardEl.classList.add('flipped');
+                        socket.emit('playerFlippingCard', { gameCode, playerId: myPlayerId, cardIndex: i });
                         setTimeout(() => {
                             cleanup();
                             socket.emit('proveCard', { gameCode, cardValue: requiredCardValue, proved: false });
