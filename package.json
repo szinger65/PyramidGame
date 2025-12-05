@@ -8,13 +8,7 @@
     "dev": "nodemon server.js",
     "build": "echo 'No build needed'"
   },
-  "keywords": [
-    "card-game",
-    "multiplayer",
-    "websocket",
-    "drinking-game"
-  ],
-  "author": "Your Name",
+  "author": "Solaiman Zinger",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
